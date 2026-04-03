@@ -6,8 +6,9 @@
     "backend"
   ],
   "dependencies": {
+    "cloudinary": "2.9.0",
     "multer": "^2.1.1",
-    "next": "14.2.35"
+    "next": "^16.2.2"
   },
   "scripts": {
     "dev": "npm run dev --workspace=frontend",
