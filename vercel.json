@@ -1,12 +1,4 @@
 {
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "git": {
-    "submodules": false
-  },
-  "installCommand": "npm install"
+  "framework": "nextjs",
+  "rootDirectory": "frontend"
 }
