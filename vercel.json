@@ -7,5 +7,6 @@
   ],
   "git": {
     "submodules": false
-  }
+  },
+  "installCommand": "npm install"
 }
