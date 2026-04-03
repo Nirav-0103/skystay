@@ -1,4 +1,15 @@
 {
+  "buildCommand": "npm run build --workspace=frontend",
+  "outputDirectory": "frontend/.next",
   "framework": "nextjs",
-  "rootDirectory": "frontend"
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/$1"
+    }
+  ],
+  "git": {
+    "submodules": false
+  },
+  "installCommand": "npm install"
 }
