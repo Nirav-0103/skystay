@@ -1,0 +1,37 @@
+{
+  "name": "skystay-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 42011",
+    "build": "next build",
+    "start": "next start -p 42011",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "axios": "^1.14.0",
+    "cloudinary": "^2.9.0",
+    "date-fns": "^3.0.6",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "lodash.debounce": "^4.0.8",
+    "lucide-react": "^1.7.0",
+    "multer-storage-cloudinary": "^2.2.1",
+    "next": "^16.2.2",
+    "next-cloudinary": "^6.17.5",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-hot-toast": "^2.4.1",
+    "react-icons": "^5.0.1",
+    "recharts": "^2.10.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "autoprefixer": "^10.4.27",
+    "eslint": "^8",
+    "eslint-config-next": "^16.2.2",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^3.4.1"
+  }
+}
