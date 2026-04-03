@@ -6,7 +6,7 @@
     "backend"
   ],
   "dependencies": {
-    "next": "14.0.4"
+    "next": "14.2.35"
   },
   "scripts": {
     "dev": "npm run dev --workspace=frontend",
