@@ -1,6 +1,9 @@
 {
   "name": "skystay-backend",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "description": "SkyStay Hotel & Flight Booking Backend",
   "main": "server.js",
   "scripts": {
