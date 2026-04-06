@@ -37,7 +37,7 @@ skystay-automation/
 ```bash
 # 1. Copy env file
 cp backend/.env.example backend/.env
-# Fill in GEMINI_API_KEY, JWT_SECRET, etc.
+# Fill in GROQ_API_KEY, JWT_SECRET, etc.
 
 # 2. Start everything (MongoDB, Redis, Backend, Frontend, Prometheus, Grafana)
 cd docker
@@ -168,7 +168,7 @@ MONGO_URI=mongodb+srv://...
 JWT_SECRET=change_this_in_production
 ADMIN_EMAIL=admin@skystay.com
 ADMIN_PASSWORD=strong_password_here
-GEMINI_API_KEY=your_google_gemini_key
+GROQ_API_KEY=your_groq_api_key
 REDIS_URL=redis://localhost:6379
 ```
 

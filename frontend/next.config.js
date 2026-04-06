@@ -3,12 +3,14 @@ const nextConfig = {
   reactStrictMode: true,
   allowedDevOrigins: ['192.0.0.2'],
 
-  // Proxy /api/* → EC2 backend (fixes HTTP/HTTPS mixed content)
+  // Proxy /api/* → AWS backend
+  // Set BACKEND_URL in Vercel env vars: http://your-eb-url.elasticbeanstalk.com
   async rewrites() {
+    const backend = process.env.BACKEND_URL || 'http://localhost:10000';
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:10000/api/:path*',
+        destination: `${backend}/api/:path*`,
       },
     ];
   },

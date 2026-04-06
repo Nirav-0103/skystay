@@ -43,7 +43,7 @@ services:
       MONGO_URI: mongodb://skystay:skystay_secret@mongodb:27017/skystay?authSource=admin
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret}
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY}
 
     depends_on:
       - mongodb

@@ -7,6 +7,25 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 require('dotenv').config();
 
+// Redis-backed rate limiter (graceful: falls back to memory if Redis unavailable)
+let redisClient;
+let RedisStore;
+try {
+  const IORedis = require('ioredis');
+  const rateLimitRedis = require('rate-limit-redis');
+  RedisStore = rateLimitRedis.RedisStore;
+  if (process.env.REDIS_URL) {
+    redisClient = new IORedis(process.env.REDIS_URL, {
+      lazyConnect: true,
+      enableOfflineQueue: false,
+      maxRetriesPerRequest: 1,
+    });
+    redisClient.on('error', (err) => console.warn('⚠️  Redis rate-limit store unavailable, falling back to memory:', err.message));
+  }
+} catch (_) {
+  console.warn('⚠️  rate-limit-redis not installed — using in-memory store. Run: npm install ioredis rate-limit-redis inside backend/');
+}
+
 const authRoutes = require('./routes/authRoutes');
 const hotelRoutes = require('./routes/hotelRoutes');
 const flightRoutes = require('./routes/flightRoutes');
@@ -28,22 +47,42 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(morgan('dev'));
 
-// ─── CORS — must be before rate limiter so preflight OPTIONS requests pass ──
+// ─── CORS — Safari fix: explicit methods + allowedHeaders ────────────────────
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:4200',
+  'http://localhost:42011',
+  'https://skystay-nine.vercel.app',
+];
+
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:4200',
-    'http://localhost:42011',
-    'https://skystay-nine.vercel.app',
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Authorization'],
+  optionsSuccessStatus: 200, // Safari needs 200 (not 204) for preflight
 }));
+
+// Handle preflight OPTIONS for all routes (Safari fix)
+app.options('*', cors());
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 500,
   standardHeaders: true,
   legacyHeaders: false,
+  // Use Redis store when available (required for multi-pod Kubernetes deployments)
+  ...(redisClient && RedisStore ? {
+    store: new RedisStore({
+      sendCommand: (...args) => redisClient.call(...args),
+    }),
+  } : {}),
 });
 app.use('/api/', limiter);
 app.use(express.json());
@@ -60,7 +99,7 @@ app.get('/api/health', (req, res) =>
 app.use('/api/auth', authRoutes);
 app.use('/api/hotels', hotelRoutes);
 app.use('/api/flights', flightRoutes);
-app.use('/api/bookings', billRoutes);   // bill route MUST be before bookingRoutes (/:id conflict)
+app.use('/api/bills', billRoutes);      // bills now on their own prefix — no /:id conflict
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
@@ -227,13 +266,12 @@ app.listen(PORT, '0.0.0.0', () =>
   console.log(`🚀 Server running on port ${PORT}`)
 );
 
-
 mongoose
   .connect(process.env.MONGO_URI)
   .then(async () => {
     console.log('✅ MongoDB Connected');
     await autoInit();
-    startScheduler(); // Start automation cron jobs
+    startScheduler();
   })
   .catch((err) => console.error('❌ MongoDB Connection Error:', err.message));
 

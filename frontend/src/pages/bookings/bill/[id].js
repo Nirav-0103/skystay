@@ -24,7 +24,7 @@ export default function BillPage() {
 
   const fetchBill = async () => {
     try {
-      const res = await fetch(`${API_URL}/bookings/${id}/bill`, {
+      const res = await fetch(`${API_URL}/bills/${id}/bill`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();

@@ -1,11 +1,7 @@
 import axios from 'axios';
 
-// ✅ IMPORTANT: Backend URL (AWS)
-const API = axios.create({
-  baseURL: 'http://54.236.57.147:10000/api',
-});
+const API = axios.create({ baseURL: '/api' });
 
-// 🔐 Token interceptor
 API.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('skystay_token');
@@ -14,7 +10,7 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-// ================= AUTH =================
+// Auth
 export const authAPI = {
   login: (data) => API.post('/auth/login', data),
   register: (data) => API.post('/auth/register', data),
@@ -25,20 +21,19 @@ export const authAPI = {
   resetPassword: (token, data) => API.put(`/auth/reset-password/${token}`, data),
   toggleWishlist: (data) => API.post('/auth/wishlist/toggle', data),
   getWishlist: () => API.get('/auth/wishlist'),
-
   // Notifications
   getNotifications: () => API.get('/users/notifications'),
   markNotifRead: (id) => API.put(`/auth/notifications/${id}/read`),
   markAllRead: () => API.put('/auth/notifications/read-all'),
+  markAllNotifsRead: () => API.put('/auth/notifications/read-all'),
   clearAllNotifs: () => API.delete('/auth/notifications/clear-all'),
   deleteNotif: (id) => API.delete(`/auth/notifications/${id}`),
-
   // Saved passengers
   getSavedPassengers: () => API.get('/users/saved-passengers'),
   savePassenger: (data) => API.post('/users/saved-passengers', data),
 };
 
-// ================= HOTELS =================
+// Hotels
 export const hotelAPI = {
   getAll: (params) => API.get('/hotels', { params }),
   getById: (id) => API.get(`/hotels/${id}`),
@@ -50,7 +45,7 @@ export const hotelAPI = {
   addReview: (id, data) => API.post(`/hotels/${id}/reviews`, data),
 };
 
-// ================= UPLOAD =================
+// Upload
 export const uploadAPI = {
   hotelImage: (file) => {
     const formData = new FormData();
@@ -67,11 +62,10 @@ export const uploadAPI = {
     formData.append('image', file);
     return API.post('/upload/avatar', formData);
   },
-  deleteHotelImage: (filename) =>
-    API.delete(`/upload/hotel-image/${filename}`),
+  deleteHotelImage: (filename) => API.delete(`/upload/hotel-image/${filename}`),
 };
 
-// ================= FLIGHTS =================
+// Flights
 export const flightAPI = {
   search: (params) => API.get('/flights/search', { params }),
   getById: (id) => API.get(`/flights/${id}`),
@@ -79,59 +73,68 @@ export const flightAPI = {
   create: (data) => API.post('/flights', data),
   update: (id, data) => API.put(`/flights/${id}`, data),
   delete: (id) => API.delete(`/flights/${id}`),
-  setStatus: (id, data) =>
-    API.put(`/flights/${id}/status`, data),
-  setPriceAlert: (id, data) =>
-    API.post(`/flights/${id}/price-alert`, data),
+  setStatus: (id, data) => API.put(`/flights/${id}/status`, data),
+  setPriceAlert: (id, data) => API.post(`/flights/${id}/price-alert`, data),
 };
 
-// ================= POSTS =================
+// Posts (Social Feed)
 export const postAPI = {
   getAll: (params) => API.get('/posts', { params }),
   create: (data) => API.post('/posts', data),
   toggleLike: (id) => API.post(`/posts/${id}/like`),
-  addComment: (id, text) =>
-    API.post(`/posts/${id}/comment`, { text }),
+  addComment: (id, text) => API.post(`/posts/${id}/comment`, { text }),
   delete: (id) => API.delete(`/posts/${id}`),
 };
 
-// ================= BOOKINGS =================
+// Bookings
 export const bookingAPI = {
   create: (data) => API.post('/bookings', data),
   getMyBookings: () => API.get('/bookings/my'),
   getMyRefunds: () => API.get('/bookings/my/refunds'),
   getById: (id) => API.get(`/bookings/${id}`),
   refund: (id, data) => API.post(`/bookings/${id}/refund`, data),
-  cancel: (id, reason) =>
-    API.put(`/bookings/${id}/cancel`, { reason }),
+  cancel: (id, reason) => API.put(`/bookings/${id}/cancel`, { reason }),
   checkIn: (id) => API.put(`/bookings/${id}/checkin`),
   getAll: (params) => API.get('/bookings', { params }),
-  updateStatus: (id, data) =>
-    API.put(`/bookings/${id}/status`, data),
-  getBill: (id) => API.get(`/bookings/${id}/bill`),
+  updateStatus: (id, data) => API.put(`/bookings/${id}/status`, data),
+  getBill: (id) => API.get(`/bills/${id}/bill`),
 };
 
-// ================= ADMIN =================
+// Admin
 export const adminAPI = {
   getStats: () => API.get('/admin/stats'),
   getAllUsers: (params) => API.get('/admin/users', { params }),
   getAdmins: () => API.get('/admin/admins'),
+  getAllAdmins: () => API.get('/admin/admins'),
   createAdmin: (data) => API.post('/admin/admins', data),
-  setAsDefault: (id) =>
-    API.put(`/admin/admins/${id}/default`),
-  sendResetEmail: (id) =>
-    API.post(`/admin/users/${id}/reset-password`),
+  setAsDefault: (id) => API.put(`/admin/admins/${id}/default`),
+  sendResetEmail: (id) => API.post(`/admin/users/${id}/reset-password`),
   deleteUser: (id) => API.delete(`/admin/users/${id}`),
-  toggleUser: (id) =>
-    API.put(`/admin/users/${id}/toggle`),
+  toggleUser: (id) => API.put(`/admin/users/${id}/toggle`),
+  getPendingBookings: () => API.get('/admin/pending-bookings'),
+  confirmBooking: (id) => API.put(`/admin/bookings/${id}/confirm`),
+  rejectBooking: (id, reason) => API.put(`/admin/bookings/${id}/reject`, { reason }),
+  syncSkyPoints: () => API.post('/admin/sync-skypoints'),
+  // Refunds
+  getAllRefunds: () => API.get('/admin/refunds'),
+  updateRefundStage: (id, data) => API.put(`/admin/refunds/${id}/stage`, data),
+  rejectRefund: (id, data) => API.put(`/admin/refunds/${id}/reject`, data),
+  exportCSV: async (type) => {
+    const res = await API.get('/admin/export', { params: { type }, responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${type}_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
 };
 
-// ================= AI =================
+// AI Services
 export const aiAPI = {
-  chat: (message, history) =>
-    API.post('/ai/chat', { message, history }),
-  tripPlanner: (data) =>
-    API.post('/ai/trip-planner', data),
-  search: (q) =>
-    API.post('/ai/nl-search', { q }),
+  chat: (message, history) => API.post('/ai/chat', { message, history }),
+  tripPlanner: (data) => API.post('/ai/trip-planner', data),
+  search: (q) => API.post('/ai/nl-search', { q }),
+  nlSearch: (q) => API.post('/ai/nl-search', { q }),
 };
