@@ -171,7 +171,7 @@ export default function Navbar() {
           </Link>
 
           {/* MOBILE MIDDLE QUICK ACTIONS (Dynamic Island Center Space) */}
-          <div className="md:hidden flex-1 flex justify-center mx-2 overflow-hidden transition-all duration-300">
+          <div className={`md:hidden flex-1 flex justify-center mx-2 overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${scrolled ? 'max-w-[200px] opacity-100' : 'max-w-0 opacity-0'}`}>
             {user ? (
               <div className="flex items-center gap-5 text-sm font-semibold">
                 <Link href="/hotels" onClick={closeAll} className={`flex items-center gap-1.5 px-2 py-1 transition rounded-lg ${isActive('/hotels') ? 'text-blue-600 font-black' : (isDark ? 'text-slate-300 hover:text-blue-400' : 'text-gray-600 hover:text-blue-600')}`}>
