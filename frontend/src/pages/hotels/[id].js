@@ -10,6 +10,7 @@ import { useCurrency } from '../../context/CurrencyContext';
 import { useNotifications } from '../../context/NotificationContext';
 import toast from 'react-hot-toast';
 import { FiMapPin, FiCheck, FiImage, FiStar, FiMessageSquare, FiUser, FiClock, FiSend, FiZap } from 'react-icons/fi';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 // ✅ Placeholder when no image / image fails to load
 function ImagePlaceholder({ name }) {
@@ -34,6 +35,9 @@ export default function HotelDetail() {
   const { user, updateUser, refreshUser } = useAuth() || {};
   const { formatPrice = (p) => p?.toLocaleString() } = useCurrency() || {};
   const { addNotification = () => {} } = useNotifications() || {};
+  const { scrollY } = useScroll();
+  const headerY = useTransform(scrollY, [0, 600], [0, 200]);
+  const headerScale = useTransform(scrollY, [0, 600], [1, 1.25]);
   const [hotel, setHotel] = useState(null);
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -180,11 +184,11 @@ export default function HotelDetail() {
               <ImagePlaceholder name={hotel.name} />
             ) : (
               <>
-                <img
+                <motion.img
                   key={activeImg}
                   src={validImages[activeImg]}
                   alt={hotel.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', y: headerY, scale: headerScale, transformOrigin: 'bottom' }}
                   onError={() => handleImgError(activeImg)}
                 />
                 <div style={{

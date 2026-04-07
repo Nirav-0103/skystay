@@ -106,7 +106,24 @@ export default function AIChatbot() {
           className="chat-toggle-btn"
           onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
           onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
-          {open ? <FiX size={24} /> : <FiMessageCircle size={26} />}
+          {open ? <FiX size={24} /> : (
+            <div style={{ position: 'relative', width: 28, height: 28 }}>
+              {/* Premium 3D AI Core Orb */}
+              <div style={{ 
+                position: 'absolute', inset: 0, borderRadius: '50%',
+                background: 'radial-gradient(circle at 30% 30%, #ffffff, #60a5fa 40%, #1e3a8a)',
+                boxShadow: '0 0 16px 4px rgba(96, 165, 250, 0.6), inset -4px -4px 10px rgba(0,0,0,0.5)',
+                animation: 'aiPulse 2s infinite alternate, aiSpin 8s linear infinite'
+              }} />
+              <div style={{
+                position: 'absolute', top: -4, left: -4, right: -4, bottom: -4, borderRadius: '50%',
+                border: '2px solid rgba(255,255,255,0.2)',
+                borderTopColor: 'rgba(255,255,255,0.8)',
+                borderBottomColor: 'rgba(255,255,255,0.8)',
+                animation: 'aiSpin 4s linear infinite reverse'
+              }} />
+            </div>
+          )}
         </button>
         {!open && unread > 0 && (
           <span style={{ position: 'absolute', top: -4, right: -4, width: 22, height: 22, background: '#ef4444', borderRadius: '50%', fontSize: '0.72rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', border: '2px solid white' }}>
@@ -217,6 +234,8 @@ export default function AIChatbot() {
       <style>{`
         @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
         @keyframes chatIn { from{opacity:0;transform:scale(0.9) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
+        @keyframes aiPulse { 0% { transform: scale(0.95); opacity: 0.8; } 100% { transform: scale(1.05); opacity: 1; } }
+        @keyframes aiSpin { 100% { transform: rotate(360deg); } }
         
         @media (max-width: 500px) {
           .chat-window {

@@ -10,6 +10,8 @@ const LuxuryCursor = dynamic(() => import('../components/common/LuxuryCursor'), 
 import 'leaflet/dist/leaflet.css';
 import '../styles/globals.css';
 import SmoothScroll from '../components/common/SmoothScroll';
+import { AnimatePresence } from 'framer-motion';
+import PageTransition from '../components/common/PageTransition';
 
 export default function App({ Component, pageProps }) {
   return (
@@ -24,7 +26,11 @@ export default function App({ Component, pageProps }) {
                 error: { iconTheme: { primary: '#ef4444', secondary: 'white' } }
               }} />
               <LuxuryCursor />
-              <Component {...pageProps} />
+              <AnimatePresence mode="wait" initial={false}>
+                <PageTransition>
+                  <Component {...pageProps} />
+                </PageTransition>
+              </AnimatePresence>
               <AIChatbot />
             </SmoothScroll>
           </NotificationProvider>
