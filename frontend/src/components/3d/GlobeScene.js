@@ -51,39 +51,54 @@ export default function GlobeScene() {
       const glowMat = new THREE.MeshBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.1, side: THREE.BackSide, blending: THREE.AdditiveBlending });
       globe.add(new THREE.Mesh(glowGeo, glowMat));
 
-      // Aura / Premium Waves around the Earth (360 degrees)
+      // Aura / Premium Waves around the Earth (with orbiting dots)
       const waves = [];
-      const waveCount = 35;
+      const waveCount = 6;
       
       for (let i = 0; i < waveCount; i++) {
-        // Dynamic radius for 360 layered effect
-        const radius = 2.05 + (Math.random() * 0.45); 
-        const waveGeo = new THREE.TorusGeometry(radius, 0.002 + Math.random() * 0.004, 16, 120);
+        // Dynamic radius for distinct orbits
+        const radius = 2.15 + (i * 0.15); 
+        
+        // The Ring
+        const waveGeo = new THREE.TorusGeometry(radius, 0.003, 16, 100);
         const waveMat = new THREE.MeshBasicMaterial({ 
-          color: 0xf5d580, // Luxury gold/champagne color
+          color: 0x60a5fa, // Soft brand blue for the track
           transparent: true, 
-          opacity: 0.1 + Math.random() * 0.15,
+          opacity: 0.15,
           blending: THREE.AdditiveBlending
         });
-        const wave = new THREE.Mesh(waveGeo, waveMat);
+        const waveGroup = new THREE.Group();
+        const waveRing = new THREE.Mesh(waveGeo, waveMat);
+        waveGroup.add(waveRing);
         
-        // Random initial rotations all around the sphere
-        wave.rotation.x = Math.random() * Math.PI * 2;
-        wave.rotation.y = Math.random() * Math.PI * 2;
-        wave.rotation.z = Math.random() * Math.PI * 2;
+        // The Orbiting Dot (Golden)
+        const dotGeo = new THREE.SphereGeometry(0.03, 16, 16);
+        const dotMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+        const dot = new THREE.Mesh(dotGeo, dotMat);
+        dot.position.x = radius; // Place straight on the ring's path
+        
+        // Glowing aura for the dot
+        const glowGeo = new THREE.SphereGeometry(0.08, 16, 16);
+        const glowMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending });
+        const glowDot = new THREE.Mesh(glowGeo, glowMat);
+        dot.add(glowDot);
+        
+        waveGroup.add(dot);
+        
+        // Random initial orientation
+        waveGroup.rotation.x = Math.random() * Math.PI * 2;
+        waveGroup.rotation.y = Math.random() * Math.PI * 2;
+        waveGroup.rotation.z = Math.random() * Math.PI * 2;
         
         // Save custom animation data
-        wave.userData = {
-          speedX: (Math.random() - 0.5) * 0.005,
-          speedY: (Math.random() - 0.5) * 0.005,
-          speedZ: (Math.random() - 0.5) * 0.005,
-          pulseSpeed: 0.5 + Math.random() * 1.5,
-          pulsePhase: Math.random() * Math.PI * 2,
-          baseScale: 1
+        waveGroup.userData = {
+          speedX: (Math.random() - 0.5) * 0.001, // Slow tilt
+          speedY: (Math.random() - 0.5) * 0.001,
+          speedZ: 0.005 + Math.random() * 0.008, // Fast orbit speed
         };
         
-        globe.add(wave);
-        waves.push(wave);
+        globe.add(waveGroup);
+        waves.push(waveGroup);
       }
 
       // Premium Stardust Particles (Golden and soft blue)
@@ -155,30 +170,31 @@ export default function GlobeScene() {
         globe.rotation.y += 0.001;
         globe.rotation.x += 0.0005;
         
-        // Smooth mouse reactivity
-        globe.rotation.x += (mouse.y * 0.15 - globe.rotation.x) * 0.02;
-        globe.rotation.z += (-mouse.x * 0.15 - globe.rotation.z) * 0.02;
+        // Smooth & strong mouse reactivity for 3D Parallax/Shake
+        globe.rotation.x += (mouse.y * 0.6 - globe.rotation.x) * 0.05;
+        globe.rotation.z += (-mouse.x * 0.4 - globe.rotation.z) * 0.05;
         
         // Pulse glow
         glowMat.opacity = 0.08 + Math.sin(t * 1.2) * 0.03;
         
-        // Animate premium waves
+        // Animate premium waves and dots
         waves.forEach(wave => {
+          // Tilt plane slowly
           wave.rotation.x += wave.userData.speedX;
           wave.rotation.y += wave.userData.speedY;
+          // Spin the ring (moving the dot along the orbit)
           wave.rotation.z += wave.userData.speedZ;
-          
-          // Breathing scale effect
-          const scale = wave.userData.baseScale + Math.sin(t * wave.userData.pulseSpeed + wave.userData.pulsePhase) * 0.03;
-          wave.scale.set(scale, scale, scale);
         });
 
         // Rotate particles smoothly
         particles.rotation.y = t * 0.04;
         particles.rotation.x = Math.sin(t * 0.02) * 0.1;
 
-        // Elegant floating effect
-        globe.position.y = Math.sin(t * 0.5) * 0.1;
+        // Elegant floating & strong parallax effect based on mouse
+        const targetY = Math.sin(t * 0.5) * 0.1 - (mouse.y * 0.6);
+        const targetX = mouse.x * 0.6;
+        globe.position.y += (targetY - globe.position.y) * 0.05;
+        globe.position.x += (targetX - globe.position.x) * 0.05;
 
         renderer.render(scene, camera);
       };
