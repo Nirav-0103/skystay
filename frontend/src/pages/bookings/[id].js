@@ -9,6 +9,9 @@ import { useAuth } from '../../context/AuthContext';
 import { FiCheck, FiClock, FiMapPin, FiDownload, FiShare2 } from 'react-icons/fi';
 import { MdFlight, MdHotel } from 'react-icons/md';
 import toast from 'react-hot-toast';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import BoardingPass from '../../components/flight/BoardingPass';
 
 const statusConfig = {
   confirmed: { color: '#10b981', bg: '#d1fae5', icon: '✅', label: 'Confirmed' },
@@ -31,6 +34,49 @@ export default function BookingDetail() {
     if (!id || !user) return;
     bookingAPI.getById(id).then(r => { setBooking(r.data.booking); setLoading(false); }).catch(() => setLoading(false));
   }, [id, user]);
+
+  const handleDownloadBoardingPass = async () => {
+    const isHotel = booking.bookingType === 'hotel';
+    if (isHotel) {
+       window.print();
+       return;
+    }
+    
+    // Flight PDF Generation
+    const passElement = document.getElementById(`boarding-pass-${booking._id}`);
+    if (!passElement) return toast.error('Boarding pass not ready');
+
+    const loadingToast = toast.loading('Generating Boarding Pass...');
+    try {
+      // Temporarily show to calculate styles correctly
+      passElement.style.left = '0px';
+      passElement.style.zIndex = '-99';
+      
+      const canvas = await html2canvas(passElement, {
+        scale: 2, // High resolution
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      });
+      
+      // Hide again
+      passElement.style.left = '-9999px';
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
+      });
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`BoardingPass_${booking.bookingId}.pdf`);
+      toast.success('Downloaded Successfully!', { id: loadingToast });
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to generate PDF', { id: loadingToast });
+      passElement.style.left = '-9999px'; // Ensure it's hidden
+    }
+  };
 
   const handleShare = async () => {
     if (sharing) return;
@@ -184,8 +230,8 @@ export default function BookingDetail() {
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: 12, marginTop: 32 }}>
-              <button onClick={() => window.print()} className="btn btn-outline" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                <FiDownload size={16} /> Download Invoice
+              <button onClick={handleDownloadBoardingPass} className="btn btn-outline" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <FiDownload size={16} /> {isHotel ? 'Download Invoice' : 'Download Boarding Pass'}
               </button>
               <button 
                 onClick={handleShare} 
@@ -201,6 +247,9 @@ export default function BookingDetail() {
       </div>
 
       <Footer />
+
+      {/* Hidden Boarding Pass for PDF generation */}
+      {!isHotel && <BoardingPass booking={booking} />}
     </>
   );
 }

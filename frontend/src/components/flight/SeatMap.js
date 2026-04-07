@@ -1,179 +1,149 @@
-import { useState, useEffect } from 'react';
-import { MdAirlineSeatReclineNormal, MdAirlineSeatReclineExtra } from 'react-icons/md';
-import { FiCheck, FiX } from 'react-icons/fi';
+import { useState } from 'react';
+import { FiUser } from 'react-icons/fi';
 
-const CLASS_CONFIG = {
-  'First Class': { rows: 2, cols: 4, colLabels: ['A','_','B','_','C','_','D'], color: '#d4af37', bg: '#fdf6e3', icon: '👑', price: null },
-  'Business': { rows: 4, cols: 4, colLabels: ['A','_','B','_','C','_','D'], color: '#6366f1', bg: '#eef2ff', icon: '💼', price: null },
-  'Economy': { rows: 20, cols: 6, colLabels: ['A','B','C','_','D','E','F'], color: '#1a6ef5', bg: '#e8f0fe', icon: '✈️', price: null },
-};
+const ROWS = 20;
+const SEATS_PER_ROW = 6;
+const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-function generateSeats(rows, cols, bookedSeats = []) {
-  const seats = [];
-  for (let r = 1; r <= rows; r++) {
-    const rowSeats = [];
-    const letters = cols === 4 ? ['A','B','C','D'] : ['A','B','C','D','E','F'];
-    letters.forEach(col => {
-      const id = `${r}${col}`;
-      const rand = Math.random();
-      rowSeats.push({
-        id,
-        row: r,
-        col,
-        status: bookedSeats.includes(id) ? 'booked' : rand < 0.25 ? 'booked' : rand < 0.35 ? 'reserved' : 'available',
-      });
-    });
-    seats.push(rowSeats);
-  }
-  return seats;
-}
-
-export default function SeatMap({ seatClasses = [], passengers = 1, onSeatSelect, selectedClass }) {
-  const [activeClass, setActiveClass] = useState(selectedClass || seatClasses[0]?.className || 'Economy');
-  const [seats, setSeats] = useState({});
+export default function SeatMap({ seatClasses, passengers = 1, selectedClass, onSeatSelect, bookedSeats = [] }) {
   const [selected, setSelected] = useState([]);
-  const [hovered, setHovered] = useState(null);
-  const [animated, setAnimated] = useState(false);
 
-  useEffect(() => {
-    const newSeats = {};
-    seatClasses.forEach(sc => {
-      const cfg = CLASS_CONFIG[sc.className];
-      if (cfg) newSeats[sc.className] = generateSeats(cfg.rows, 4);
-    });
-    if (!seatClasses.length) {
-      newSeats['Economy'] = generateSeats(20, 6);
-      newSeats['Business'] = generateSeats(4, 4);
-      newSeats['First Class'] = generateSeats(2, 4);
+  const handleSelect = (seatId, sClass) => {
+    if (bookedSeats.includes(seatId)) return;
+    
+    let newSelected = [...selected];
+    const exists = newSelected.find(s => s.id === seatId);
+    
+    if (exists) {
+      newSelected = newSelected.filter(s => s.id !== seatId);
+    } else {
+      if (newSelected.length >= passengers) {
+        newSelected.shift(); // remove first to allow new
+      }
+      newSelected.push({ id: seatId, class: sClass });
     }
-    setSeats(newSeats);
-    setTimeout(() => setAnimated(true), 100);
-  }, []);
-
-  useEffect(() => {
-    setSelected([]);
-    setAnimated(false);
-    setTimeout(() => setAnimated(true), 50);
-  }, [activeClass]);
-
-  const handleSeatClick = (seat) => {
-    if (seat.status === 'booked' || seat.status === 'reserved') return;
-    setSelected(prev => {
-      const exists = prev.find(s => s.id === seat.id);
-      if (exists) return prev.filter(s => s.id !== seat.id);
-      if (prev.length >= passengers) return [...prev.slice(1), seat];
-      return [...prev, seat];
-    });
+    
+    setSelected(newSelected);
+    // Propagate to parent [id].js format: array of {id}
+    onSeatSelect(newSelected, sClass === 'business' ? 'Business' : sClass === 'premium' ? 'Premium Economy' : 'Economy');
   };
 
-  useEffect(() => {
-    if (onSeatSelect) onSeatSelect(selected, activeClass);
-  }, [selected, activeClass]);
+  const getSeatClass = (row, letter) => {
+    // 1-4 Business Class, 5-10 Premium Economy, 11-20 Economy
+    if (row <= 4) return 'business';
+    if (row <= 10) return 'premium';
+    return 'economy';
+  };
 
-  const currentSeats = seats[activeClass] || [];
-  const cfg = CLASS_CONFIG[activeClass] || CLASS_CONFIG['Economy'];
-  const sc = seatClasses.find(s => s.className === activeClass);
+  const getSeatPrice = (seatClass, isWindow, isAisle) => {
+    let base = seatClass === 'business' ? 5000 : seatClass === 'premium' ? 2000 : 0;
+    if (isWindow || isAisle) base += 500;
+    return base;
+  };
 
   return (
-    <div style={{ fontFamily: 'inherit' }}>
-      {/* Class Tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-        {(seatClasses.length ? seatClasses : [{ className: 'Economy' }, { className: 'Business' }, { className: 'First Class' }]).map(sc => {
-          const c = CLASS_CONFIG[sc.className];
-          const isActive = activeClass === sc.className;
-          return (
-            <button key={sc.className} onClick={() => setActiveClass(sc.className)}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 12, border: `2px solid ${isActive ? c?.color : 'var(--border)'}`, background: isActive ? c?.bg : 'white', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.25s', transform: isActive ? 'translateY(-2px)' : 'none', boxShadow: isActive ? `0 4px 12px ${c?.color}30` : 'none', color: isActive ? c?.color : 'var(--text-secondary)' }}>
-              {c?.icon} {sc.className}
-              {sc.price && <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>₹{sc.price?.toLocaleString()}</span>}
-            </button>
-          );
-        })}
+    <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-xl)', padding: 24, border: '1px solid var(--border)' }}>
+      <h3 style={{ fontWeight: 800, marginBottom: 20 }}>Select Your Seats</h3>
+      
+      {/* Plane fuselage layout */}
+      <div style={{ 
+        maxWidth: 320, margin: '0 auto', 
+        background: '#f8fafc', 
+        border: '4px solid #cbd5e1', 
+        borderRadius: '80px 80px 40px 40px',
+        padding: '60px 20px 40px',
+        position: 'relative'
+      }}>
+        {/* Cockpit curve */}
+        <div style={{ 
+          position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
+          width: 140, height: 60, borderBottom: '4px solid #cbd5e1',
+          content: '""'
+        }} />
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {Array.from({ length: ROWS }).map((_, rowIdx) => {
+            const row = rowIdx + 1;
+            return (
+              <div key={row} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {LETTERS.slice(0, 3).map(letter => {
+                    const seatId = `${row}${letter}`;
+                    const isBooked = bookedSeats.includes(seatId);
+                    const isSelected = selected.some(s => s.id === seatId);
+                    const seatClass = getSeatClass(row, letter);
+                    
+                    return (
+                      <button
+                        key={seatId}
+                        disabled={isBooked}
+                        onClick={() => handleSelect(seatId, seatClass)}
+                        className={`seat ${seatClass} ${isSelected ? 'selected' : ''} ${isBooked ? 'booked' : ''}`}
+                        title={`${seatId} ${isBooked ? '(Booked)' : ''}`}
+                      >
+                       {isSelected && <FiUser size={14} />}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                {/* Aisle */}
+                <div style={{ width: 30, textAlign: 'center', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>
+                  {row}
+                </div>
+
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {LETTERS.slice(3, 6).map(letter => {
+                    const seatId = `${row}${letter}`;
+                    const isBooked = bookedSeats.includes(seatId);
+                    const isSelected = selected.some(s => s.id === seatId);
+                    const seatClass = getSeatClass(row, letter);
+                    
+                    return (
+                      <button
+                         key={seatId}
+                         disabled={isBooked}
+                         onClick={() => handleSelect(seatId, seatClass)}
+                         className={`seat ${seatClass} ${isSelected ? 'selected' : ''} ${isBooked ? 'booked' : ''}`}
+                         title={`${seatId} ${isBooked ? '(Booked)' : ''}`}
+                      >
+                        {isSelected && <FiUser size={14} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Legend */}
-      <div style={{ display: 'flex', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
-        {[
-          { color: '#e2e8f0', label: 'Available', border: '#cbd5e1' },
-          { color: cfg.color, label: 'Selected', border: cfg.color },
-          { color: '#fee2e2', label: 'Booked', border: '#fca5a5' },
-          { color: '#fef3c7', label: 'Reserved', border: '#fcd34d' },
-        ].map(l => (
-          <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-            <div style={{ width: 16, height: 16, borderRadius: 4, background: l.color, border: `2px solid ${l.border}` }} />
-            {l.label}
-          </div>
-        ))}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 24, justifyContent: 'center', fontSize: '0.85rem', fontWeight: 600 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div className="seat business" style={{ pointerEvents: 'none' }} /> Business</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div className="seat premium" style={{ pointerEvents: 'none' }} /> Premium</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div className="seat economy" style={{ pointerEvents: 'none' }} /> Economy</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div className="seat selected" style={{ pointerEvents: 'none' }} /> Selected</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div className="seat booked" style={{ pointerEvents: 'none' }} /> Booked</div>
       </div>
 
-      {/* Plane Nose */}
-      <div style={{ textAlign: 'center', marginBottom: 8 }}>
-        <div style={{ display: 'inline-block', padding: '6px 24px', background: 'linear-gradient(135deg, #0d1b2e, #1a3a6e)', borderRadius: '30px 30px 0 0', color: 'white', fontSize: '0.78rem', fontWeight: 700 }}>✈ FRONT</div>
-      </div>
-
-      {/* Seat Map Container */}
-      <div style={{ background: 'linear-gradient(180deg, #f8fafd 0%, #ffffff 100%)', borderRadius: 16, border: '2px solid var(--border)', padding: '20px 12px', maxHeight: 420, overflowY: 'auto', position: 'relative' }}>
-        {/* Column Labels */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 4, marginBottom: 10 }}>
-          <div style={{ width: 32 }} />
-          {(activeClass === 'Economy' ? ['A','B','C','','D','E','F'] : ['A','B','','C','D']).map((col, i) => (
-            <div key={i} style={{ width: col ? 32 : 20, textAlign: 'center', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)' }}>{col}</div>
-          ))}
-        </div>
-
-        {/* Rows */}
-        {currentSeats.map((row, ri) => (
-          <div key={ri} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 4, opacity: animated ? 1 : 0, transform: animated ? 'translateX(0)' : `translateX(${ri % 2 === 0 ? -20 : 20}px)`, transition: `all 0.3s ease ${ri * 0.02}s` }}>
-            {/* Row number */}
-            <div style={{ width: 32, textAlign: 'center', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>{ri + 1}</div>
-            {/* Seats */}
-            {(activeClass === 'Economy' ? ['A','B','C',null,'D','E','F'] : ['A','B',null,'C','D']).map((col, ci) => {
-              if (!col) return <div key={ci} style={{ width: 20 }} />;
-              const seat = row.find(s => s.col === col);
-              if (!seat) return <div key={ci} style={{ width: 32 }} />;
-              const isSelected = selected.find(s => s.id === seat.id);
-              const isHov = hovered === seat.id;
-
-              let bg = '#e2e8f0', border = '#cbd5e1', cursor = 'pointer';
-              if (seat.status === 'booked') { bg = '#fee2e2'; border = '#fca5a5'; cursor = 'not-allowed'; }
-              else if (seat.status === 'reserved') { bg = '#fef3c7'; border = '#fcd34d'; cursor = 'not-allowed'; }
-              else if (isSelected) { bg = cfg.color; border = cfg.color; }
-              else if (isHov) { bg = cfg.bg; border = cfg.color; }
-
-              return (
-                <div key={ci}
-                  onClick={() => handleSeatClick(seat)}
-                  onMouseEnter={() => seat.status === 'available' && setHovered(seat.id)}
-                  onMouseLeave={() => setHovered(null)}
-                  title={`Seat ${seat.id} - ${seat.status}`}
-                  style={{ width: 32, height: 28, borderRadius: '6px 6px 4px 4px', background: bg, border: `2px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor, transition: 'all 0.15s', transform: isSelected ? 'scale(1.1)' : isHov ? 'scale(1.05)' : 'scale(1)', boxShadow: isSelected ? `0 2px 8px ${cfg.color}50` : 'none' }}>
-                  {isSelected ? <FiCheck size={12} color="white" /> : seat.status === 'booked' ? <FiX size={10} color="#ef4444" /> : null}
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-
-      {/* Selected Summary */}
-      {selected.length > 0 && (
-        <div style={{ marginTop: 16, padding: '14px 18px', background: `${cfg.bg}`, borderRadius: 12, border: `1.5px solid ${cfg.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-          <div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 2 }}>Selected Seats</div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {selected.map(s => (
-                <span key={s.id} style={{ padding: '3px 10px', background: cfg.color, color: 'white', borderRadius: 20, fontSize: '0.8rem', fontWeight: 700 }}>{s.id}</span>
-              ))}
-            </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{selected.length}/{passengers} selected</div>
-            {selected.length < passengers && (
-              <div style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 600 }}>Select {passengers - selected.length} more</div>
-            )}
-          </div>
-        </div>
-      )}
+      <style jsx>{`
+        .seat {
+          width: 32px; height: 32px;
+          border-radius: 6px;
+          border: 1px solid var(--border-light);
+          cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          transition: all 0.2s;
+          color: white;
+        }
+        .seat:hover:not(.booked) { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: var(--primary); }
+        .business { background: #e0e7ff; border-color: #818cf8; }
+        .premium { background: #ffedd5; border-color: #fb923c; }
+        .economy { background: #f1f5f9; border-color: #cbd5e1; }
+        .selected { background: var(--primary) !important; border-color: var(--primary) !important; box-shadow: 0 4px 12px rgba(26,110,245,0.4); }
+        .booked { background: #cbd5e1 !important; border-color: #94a3b8 !important; cursor: not-allowed; opacity: 0.5; }
+      `}</style>
     </div>
   );
 }

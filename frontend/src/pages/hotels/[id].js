@@ -9,7 +9,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useNotifications } from '../../context/NotificationContext';
 import toast from 'react-hot-toast';
-import { FiMapPin, FiCheck, FiImage, FiStar, FiMessageSquare, FiUser, FiClock, FiSend, FiZap } from 'react-icons/fi';
+import { FiMapPin, FiCheck, FiImage, FiStar, FiMessageSquare, FiUser, FiClock, FiSend, FiZap, FiBox } from 'react-icons/fi';
+import dynamic from 'next/dynamic';
+
+const Hotel360Viewer = dynamic(() => import('../../components/hotel/Hotel360Viewer'), { ssr: false });
 
 // ✅ Placeholder when no image / image fails to load
 function ImagePlaceholder({ name }) {
@@ -42,6 +45,7 @@ export default function HotelDetail() {
   const [selectedRoom, setSelectedRoom] = useState(0);
   const [booking, setBooking] = useState({ checkIn: '', checkOut: '', guests: 1 });
   const [showPayment, setShowPayment] = useState(false);
+  const [show360, setShow360] = useState(false);
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
   const today = new Date().toISOString().split('T')[0];
@@ -187,6 +191,21 @@ export default function HotelDetail() {
                   background: 'linear-gradient(transparent, rgba(0,0,0,0.3))',
                   pointerEvents: 'none'
                 }} />
+                <button onClick={() => setShow360(true)}
+                  style={{
+                    position: 'absolute', top: 20, right: 20,
+                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)',
+                    color: 'white', border: '1px solid rgba(255,255,255,0.2)',
+                    padding: '10px 20px', borderRadius: 'var(--radius-full)',
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--primary)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.6)'}
+                >
+                  <FiBox size={18} /> 360° Virtual Tour
+                </button>
               </>
             )}
           </div>
@@ -486,6 +505,14 @@ export default function HotelDetail() {
       </div>
 
       <Footer />
+
+      {show360 && (
+        <Hotel360Viewer 
+          onClose={() => setShow360(false)} 
+          imageUrl="https://pannellum.org/images/alma.jpg" // Using an open source reliable equirectangular image 
+        />
+      )}
+
       {showPayment && (
         <PaymentModal
           amount={total}
