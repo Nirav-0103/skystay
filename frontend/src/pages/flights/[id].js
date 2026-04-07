@@ -28,7 +28,7 @@ const SECTIONS = [
 export default function FlightDetail() {
   const router = useRouter();
   const { id, passengers: qPass = 1, class: qClass = 'Economy' } = router.query;
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { formatPrice } = useCurrency();
   const [flight, setFlight] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -472,7 +472,10 @@ export default function FlightDetail() {
 
       {showPayment && (
         <PaymentModal amount={total} bookingData={{ bookingType: 'flight' }} user={user}
-          onSuccess={handlePaymentSuccess} onClose={() => setShowPayment(false)} />
+          razorpayKey="rzp_test_Saa4MIHeMmOARW"
+          onSuccess={handlePaymentSuccess}
+          onClose={() => setShowPayment(false)}
+          onRefreshUser={refreshUser} />
       )}
 
       <Footer />

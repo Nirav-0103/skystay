@@ -31,7 +31,7 @@ function ImagePlaceholder({ name }) {
 export default function HotelDetail() {
   const router = useRouter();
   const { id } = router.query;
-  const { user, updateUser } = useAuth() || {};
+  const { user, updateUser, refreshUser } = useAuth() || {};
   const { formatPrice = (p) => p?.toLocaleString() } = useCurrency() || {};
   const { addNotification = () => {} } = useNotifications() || {};
   const [hotel, setHotel] = useState(null);
@@ -500,6 +500,7 @@ export default function HotelDetail() {
           razorpayKey="rzp_test_Saa4MIHeMmOARW"
           onSuccess={handlePaymentSuccess}
           onClose={() => setShowPayment(false)}
+          onRefreshUser={refreshUser}
         />
       )}
 

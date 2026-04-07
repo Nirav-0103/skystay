@@ -2,11 +2,18 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { FiCreditCard, FiSmartphone, FiHome } from 'react-icons/fi';
 
-export default function PaymentModal({ amount, bookingData, onSuccess, onClose, user, razorpayKey }) {
+export default function PaymentModal({ amount, bookingData, onSuccess, onClose, user, razorpayKey, onRefreshUser }) {
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [loading, setLoading] = useState(false);
   const walletBal = user?.walletBalance || 0;
   const canUseWallet = walletBal >= amount;
+
+  // Smart number formatter - abbreviates large numbers
+  const fmt = (n) => {
+    if (n >= 1e7) return `₹${(n / 1e7).toFixed(2)} Cr`;
+    if (n >= 1e5) return `₹${(n / 1e5).toFixed(1)} L`;
+    return `₹${n.toLocaleString('en-IN')}`;
+  };
 
   const isHotel = bookingData?.bookingType === 'hotel';
   const isFlight = bookingData?.bookingType === 'flight';
@@ -114,8 +121,8 @@ export default function PaymentModal({ amount, bookingData, onSuccess, onClose, 
       label: 'SkyPay Wallet',
       icon: <span style={{ fontSize: '1.2rem' }}>💳</span>,
       desc: canUseWallet
-        ? `Balance: ₹${walletBal.toLocaleString('en-IN')} ✅`
-        : `Balance: ₹${walletBal.toLocaleString('en-IN')} — Need ₹${(amount - walletBal).toLocaleString('en-IN')} more`,
+        ? `Balance: ${fmt(walletBal)} ✅`
+        : `Balance: ${fmt(walletBal)} — Need ${fmt(amount - walletBal)} more`,
       color: '#fbbf24',
       bg: '#fcf8eb',
       disabled: !canUseWallet
@@ -167,10 +174,12 @@ export default function PaymentModal({ amount, bookingData, onSuccess, onClose, 
       setLoading(true);
       try {
         await onSuccess('wallet', { transactionId: 'TXN_SKY_' + Date.now() });
+        // Refresh user from server to get updated wallet balance
+        if (onRefreshUser) await onRefreshUser();
         toast.success('Payment successful via SkyPay Wallet! 🎉');
         onClose();
       } catch (err) {
-        toast.error('Booking failed');
+        toast.error(err?.response?.data?.message || 'Booking failed');
       }
       setLoading(false);
       return;
