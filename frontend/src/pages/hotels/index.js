@@ -7,13 +7,7 @@ import HotelCard from '../../components/hotel/HotelCard';
 import { CardSkeleton } from '../../components/common/Skeleton';
 import { hotelAPI } from '../../utils/api';
 import { useCurrency } from '../../context/CurrencyContext';
-import { FiFilter, FiSearch, FiX, FiMap, FiList } from 'react-icons/fi';
-import dynamic from 'next/dynamic';
-
-const MapView = dynamic(() => import('../../components/hotel/HotelMap'), {
-  ssr: false,
-  loading: () => <div className="skeleton" style={{ width: '100%', height: '100%', borderRadius: 'var(--radius-lg)' }} />
-});
+import { FiFilter, FiSearch, FiX } from 'react-icons/fi';
 
 const CITIES = ['Mumbai', 'Delhi', 'Goa', 'Bangalore', 'Chennai', 'Kolkata', 'Jaipur', 'Udaipur'];
 
@@ -24,7 +18,7 @@ export default function HotelsPage() {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [filters, setFilters] = useState({ city: '', maxPrice: '', sort: 'rating', search: '' });
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -115,18 +109,6 @@ export default function HotelsPage() {
           )}
         </div>
 
-        {/* View Toggle */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
-          <div style={{ display: 'flex', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-full)', padding: 4, gap: 4 }}>
-            <button onClick={() => setViewMode('list')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 'var(--radius-full)', border: 'none', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.2s', background: viewMode === 'list' ? 'var(--primary)' : 'transparent', color: viewMode === 'list' ? 'white' : 'var(--text-secondary)' }}>
-              <FiList size={16} /> List
-            </button>
-            <button onClick={() => setViewMode('map')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 'var(--radius-full)', border: 'none', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.2s', background: viewMode === 'map' ? 'var(--primary)' : 'transparent', color: viewMode === 'map' ? 'white' : 'var(--text-secondary)' }}>
-              <FiMap size={16} /> Map
-            </button>
-          </div>
-        </div>
-
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
             {[...Array(8)].map((_, i) => <CardSkeleton key={i} />)}
@@ -137,18 +119,9 @@ export default function HotelsPage() {
             <h3 style={{ marginBottom: 8 }}>No hotels found</h3>
             <p>Try adjusting your filters</p>
           </div>
-        ) : viewMode === 'list' ? (
+        ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: 20 }}>
             {hotels.map(hotel => <HotelCard key={hotel._id} hotel={hotel} />)}
-          </div>
-        ) : (
-          <div style={{ height: 'calc(100vh - 350px)', minHeight: 600, borderRadius: 'var(--radius-xl)', overflow: 'hidden', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)', display: 'flex' }}>
-            <div className="desktop-only" style={{ width: 400, height: '100%', overflowY: 'auto', background: 'var(--bg)', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {hotels.map(hotel => <HotelCard key={hotel._id} hotel={hotel} compact />)}
-            </div>
-            <div style={{ flex: 1, height: '100%' }}>
-              <MapView hotels={hotels} />
-            </div>
           </div>
         )}
       </div>
