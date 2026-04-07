@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import dynamic from 'next/dynamic';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import HotelCard from '../components/hotel/HotelCard';
@@ -8,6 +9,9 @@ import TripPlanner from '../components/common/TripPlanner';
 import { hotelAPI, aiAPI } from '../utils/api';
 import { FiMapPin, FiCalendar, FiUsers, FiSearch, FiZap, FiStar } from 'react-icons/fi';
 import { MdFlight, MdHotel, MdSecurity, MdSupportAgent } from 'react-icons/md';
+
+// Dynamic import for 3D Globe (SSR disabled — WebGL only runs in browser)
+const GlobeScene = dynamic(() => import('../components/3d/GlobeScene'), { ssr: false });
 
 const CITIES = ['Mumbai', 'Delhi', 'Goa', 'Bangalore', 'Chennai', 'Kolkata', 'Jaipur', 'Udaipur', 'Hyderabad', 'Pune'];
 const POPULAR_DESTINATIONS = [
@@ -89,17 +93,11 @@ export default function Home() {
 
       {/* HERO */}
       <section style={{ position: 'relative', minHeight: 580, display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-          <img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1600" alt="hero" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(13,27,46,0.92) 0%, rgba(26,58,110,0.85) 50%, rgba(26,110,245,0.75) 100%)' }} />
-        </div>
+        {/* Dark gradient background */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0, background: 'linear-gradient(135deg, #050a18 0%, #0a1628 30%, #0d1f3c 60%, #0a1628 100%)' }} />
 
-        {/* Animated particles */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden' }}>
-          {[...Array(6)].map((_, i) => (
-            <div key={i} style={{ position: 'absolute', width: 2, height: 2, background: 'rgba(255,255,255,0.4)', borderRadius: '50%', left: `${15 + i * 15}%`, top: `${20 + (i % 3) * 25}%`, animation: `float ${3 + i * 0.5}s ease-in-out ${i * 0.3}s infinite` }} />
-          ))}
-        </div>
+        {/* 3D Globe Background */}
+        <GlobeScene />
 
         <div className="container" style={{ position: 'relative', zIndex: 1, paddingTop: 60, paddingBottom: 60, width: '100%' }}>
           <div style={{ textAlign: 'center', marginBottom: 36, opacity: heroVisible ? 1 : 0, transform: heroVisible ? 'translateY(0)' : 'translateY(30px)', transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }}>
@@ -231,11 +229,15 @@ export default function Home() {
       </section>
 
       {/* AI Trip Planner Banner */}
-      <section style={{ background: 'linear-gradient(135deg, #0d1b2e 0%, #1a3a6e 100%)', padding: '40px 0' }}>
-        <div className="container">
+      <section style={{ background: 'linear-gradient(135deg, #0d1b2e 0%, #1a3a6e 100%)', padding: '40px 0', position: 'relative', overflow: 'hidden' }}>
+        {/* Floating 3D Airplane */}
+        <div className="floating-plane" style={{ position: 'absolute', right: '8%', top: '50%', transform: 'translateY(-50%)', fontSize: '3rem', opacity: 0.15, pointerEvents: 'none' }}>
+          ✈️
+        </div>
+        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ width: 56, height: 56, background: 'rgba(255,255,255,0.1)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'float 3s ease-in-out infinite' }}>
+              <div style={{ width: 56, height: 56, background: 'rgba(255,255,255,0.1)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'float 3s ease-in-out infinite', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)' }}>
                 <FiZap size={28} color="#fbbf24" />
               </div>
               <div>
@@ -310,12 +312,28 @@ export default function Home() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
             {POPULAR_DESTINATIONS.map((dest, i) => (
-              <div key={dest.city} className="img-hover" onClick={() => router.push(`/hotels?city=${dest.city}`)}
-                style={{ position: 'relative', height: 250, borderRadius: 'var(--radius-xl)', overflow: 'hidden', cursor: 'pointer', boxShadow: 'var(--shadow-md)', animation: `fadeInUp 0.5s ease ${i * 0.1}s both', transition: 'var(--transition)` }}
-                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-6px) scale(1.01)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0) scale(1)'}>
+              <div key={dest.city} className="tilt-card" onClick={() => router.push(`/hotels?city=${dest.city}`)}
+                style={{ position: 'relative', height: 250, borderRadius: 'var(--radius-xl)', overflow: 'hidden', cursor: 'pointer', boxShadow: 'var(--shadow-md)', animation: `fadeInUp 0.5s ease ${i * 0.1}s both`, transition: 'transform 0.4s cubic-bezier(0.03, 0.98, 0.52, 0.99), box-shadow 0.4s', transformStyle: 'preserve-3d', perspective: '800px' }}
+                onMouseMove={e => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = (e.clientX - rect.left) / rect.width - 0.5;
+                  const y = (e.clientY - rect.top) / rect.height - 0.5;
+                  e.currentTarget.style.transform = `perspective(800px) rotateY(${x * 12}deg) rotateX(${-y * 12}deg) scale(1.03)`;
+                  e.currentTarget.style.boxShadow = `${-x * 20}px ${y * 20}px 40px rgba(0,0,0,0.3)`;
+                  // Move glare
+                  const glare = e.currentTarget.querySelector('.card-glare');
+                  if (glare) { glare.style.opacity = '1'; glare.style.background = `radial-gradient(circle at ${(x + 0.5) * 100}% ${(y + 0.5) * 100}%, rgba(255,255,255,0.25) 0%, transparent 60%)`; }
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'perspective(800px) rotateY(0) rotateX(0) scale(1)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+                  const glare = e.currentTarget.querySelector('.card-glare');
+                  if (glare) glare.style.opacity = '0';
+                }}>
                 <img src={dest.img} alt={dest.city} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)' }} />
+                {/* 3D Glare overlay */}
+                <div className="card-glare" style={{ position: 'absolute', inset: 0, opacity: 0, transition: 'opacity 0.3s', pointerEvents: 'none', borderRadius: 'inherit' }} />
                 <div style={{ position: 'absolute', bottom: 20, left: 20, color: 'white' }}>
                   <div style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: '1.2rem' }}>{dest.city}</div>
                   <div style={{ fontSize: '0.78rem', opacity: 0.85, marginTop: 2 }}>{dest.desc}</div>
@@ -330,6 +348,24 @@ export default function Home() {
       <Footer />
 
       {showTripPlanner && <TripPlanner onClose={() => setShowTripPlanner(false)} />}
+
+      <style jsx>{`
+        @keyframes floatPlane {
+          0%, 100% { transform: translateY(-50%) rotateZ(-5deg) translateX(0); }
+          25% { transform: translateY(-55%) rotateZ(0deg) translateX(10px); }
+          50% { transform: translateY(-45%) rotateZ(5deg) translateX(-5px); }
+          75% { transform: translateY(-52%) rotateZ(-2deg) translateX(8px); }
+        }
+        .floating-plane {
+          animation: floatPlane 8s ease-in-out infinite;
+        }
+        .tilt-card {
+          will-change: transform;
+        }
+        @media (max-width: 640px) {
+          .floating-plane { display: none !important; }
+        }
+      `}</style>
     </>
   );
 }
