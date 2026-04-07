@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const PDFDocument = require('pdfkit');
+const QRCode = require('qrcode');
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -12,9 +13,9 @@ const transporter = nodemailer.createTransport({
 // ─── PDF GENERATION ───────────────────────────────────────────
 
 const generateInvoicePDF = (booking, user) => {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
-      const doc = new PDFDocument({ margin: 50 });
+      const doc = new PDFDocument({ margin: 40, size: 'A4' });
       let buffers = [];
       doc.on('data', buffers.push.bind(buffers));
       doc.on('end', () => {
@@ -22,53 +23,69 @@ const generateInvoicePDF = (booking, user) => {
         resolve(pdfData);
       });
 
-      // Header
-      doc.fillColor('#0f172a').fontSize(24).text('SkyStay Premium Travel', 50, 50);
-      doc.fontSize(10).fillColor('#64748b').text('Premium Hotel & Flight Booking Platform', 50, 80);
-      
-      doc.fontSize(18).fillColor('#0f172a').text('INVOICE', 450, 50, { align: 'right' });
-      doc.fontSize(10).fillColor('#64748b').text(`#${booking.bookingId}`, 450, 75, { align: 'right' });
+      // Generate QR
+      const qrData = JSON.stringify({ id: booking.bookingId, user: user.email });
+      const qrBuffer = await QRCode.toBuffer(qrData, { width: 100, margin: 1 });
 
-      doc.moveTo(50, 110).lineTo(550, 110).stroke('#e2e8f0');
-
-      // Details
-      doc.fillColor('#94a3b8').fontSize(10).text('BILLED TO', 50, 140);
-      doc.fillColor('#0f172a').fontSize(12).text(user.name || 'Valued Guest', 50, 155);
-      doc.fillColor('#64748b').fontSize(10).text(user.email, 50, 170);
-      doc.text(user.phone || '', 50, 185);
-
-      doc.fillColor('#94a3b8').fontSize(10).text('INVOICE DATE', 450, 140, { align: 'right' });
-      doc.fillColor('#0f172a').fontSize(12).text(new Date().toLocaleDateString('en-IN'), 450, 155, { align: 'right' });
-      doc.fillColor('#94a3b8').fontSize(10).text('PAYMENT METHOD', 450, 180, { align: 'right' });
-      doc.fillColor('#0f172a').fontSize(10).text(booking.paymentMethod?.toUpperCase() || 'N/A', 450, 195, { align: 'right' });
-
-      // Table Header
-      doc.rect(50, 240, 500, 30).fill('#f8fafc');
-      doc.fillColor('#94a3b8').fontSize(10).text('DESCRIPTION', 60, 250);
-      doc.text('QTY/DURATION', 300, 250, { width: 100, align: 'center' });
-      doc.text('AMOUNT', 450, 250, { width: 100, align: 'right' });
-
-      // Table Row
       const isHotel = booking.bookingType === 'hotel';
-      const description = isHotel ? `${booking.hotel?.name} (${booking.roomType})` : `Flight ${booking.flight?.flightNumber} (${booking.flight?.airline})`;
-      const qty = isHotel ? `${booking.nights} Nights` : `${booking.passengers} Pax`;
-      const amount = `INR ${booking.totalAmount?.toLocaleString('en-IN')}`;
+      
+      // Draw Ticket Background
+      doc.rect(40, 40, 515, 230).fillAndStroke('#ffffff', '#e2e8f0');
+      doc.rect(40, 40, 515, 45).fill('#0f172a'); // top dark header
 
-      doc.fillColor('#0f172a').fontSize(11).text(description, 60, 285);
-      doc.fontSize(10).fillColor('#64748b').text(isHotel ? `${booking.hotel?.city} · ${new Date(booking.checkIn).toLocaleDateString('en-IN')} to ${new Date(booking.checkOut).toLocaleDateString('en-IN')}` : `${booking.flight?.from} -> ${booking.flight?.to} · Dep: ${booking.flight?.departureTime}`, 60, 300);
-      doc.fillColor('#0f172a').text(qty, 300, 285, { width: 100, align: 'center' });
-      doc.text(amount, 450, 285, { width: 100, align: 'right' });
+      doc.fillColor('#ffffff').fontSize(16).text(isHotel ? 'Luxury Hotel Voucher' : 'Premium Boarding Pass', 60, 55);
+      doc.fontSize(12).text('SKYSTAY', 480, 58);
 
-      doc.moveTo(50, 330).lineTo(550, 330).stroke('#f1f5f9');
+      // Details Setup
+      const detailY = 110;
+      doc.fillColor('#64748b').fontSize(9).text(isHotel ? 'GUEST' : 'PASSENGER', 60, detailY);
+      doc.fillColor('#0f172a').fontSize(13).text(user.name?.toUpperCase() || 'VALUED GUEST', 60, detailY + 15);
 
-      // Total
-      doc.rect(350, 360, 200, 50).fill('#1a6ef5');
-      doc.fillColor('#ffffff').fontSize(12).text('TOTAL AMOUNT', 365, 375);
-      doc.fontSize(16).text(amount, 365, 390, { width: 170, align: 'right' });
+      if (isHotel) {
+        doc.fillColor('#64748b').fontSize(9).text('HOTEL', 60, detailY + 55);
+        doc.fillColor('#0f172a').fontSize(11).text(booking.hotel?.name || 'SkyStay Hotel', 60, detailY + 70);
 
-      // Footer
-      doc.fillColor('#94a3b8').fontSize(10).text('Thank you for choosing SkyStay!', 50, 700, { align: 'center', width: 500 });
-      doc.text('This is a computer generated invoice and does not require a signature.', 50, 715, { align: 'center', width: 500 });
+        doc.fillColor('#64748b').fontSize(9).text('CHECK-IN', 280, detailY + 55);
+        doc.fillColor('#0f172a').fontSize(11).text(new Date(booking.checkIn).toLocaleDateString('en-IN'), 280, detailY + 70);
+
+        doc.fillColor('#64748b').fontSize(9).text('ROOM TYPE', 60, detailY + 110);
+        doc.fillColor('#0f172a').fontSize(11).text(booking.roomType || 'Standard', 60, detailY + 125);
+
+        doc.fillColor('#64748b').fontSize(9).text('BOOKING ID', 280, detailY + 110);
+        doc.fillColor('#0f172a').fontSize(13).text(booking.bookingId, 280, detailY + 122);
+      } else {
+        doc.fillColor('#64748b').fontSize(9).text('FLIGHT', 60, detailY + 55);
+        doc.fillColor('#0f172a').fontSize(11).text(`${booking.flight?.airline || 'Airline'} ${booking.flight?.flightNumber || '000'}`, 60, detailY + 70);
+
+        doc.fillColor('#64748b').fontSize(9).text('ROUTE', 280, detailY + 55);
+        doc.fillColor('#0f172a').fontSize(11).text(`${booking.flight?.from || 'ORG'} ✈ ${booking.flight?.to || 'DST'}`, 280, detailY + 70);
+
+        doc.fillColor('#64748b').fontSize(9).text('CLASS', 60, detailY + 110);
+        doc.fillColor('#0f172a').fontSize(11).text(booking.seatClass || 'Economy', 60, detailY + 125);
+
+        doc.fillColor('#64748b').fontSize(9).text('BOOKING ID', 280, detailY + 110);
+        doc.fillColor('#0f172a').fontSize(13).text(booking.bookingId, 280, detailY + 122);
+      }
+
+      // Cutout Line
+      doc.moveTo(420, 85).lineTo(420, 270).dash(5, { space: 5 }).stroke('#e2e8f0').undash();
+
+      // Ensure ticket layout looks good
+      doc.fillColor('#64748b').fontSize(8).text('SCAN VERIFY', 440, 100, { width: 100, align: 'center' });
+      doc.image(qrBuffer, 440, 120, { width: 100 });
+      doc.fillColor('#0f172a').fontSize(9).text('Valid Ticket ✅', 440, 235, { width: 100, align: 'center' });
+
+      // Invoice Bottom Part
+      doc.fillColor('#0f172a').fontSize(18).text('Payment Receipt', 40, 320);
+      doc.moveTo(40, 350).lineTo(555, 350).stroke('#e2e8f0');
+      
+      doc.fillColor('#64748b').fontSize(10).text('TOTAL PAID AMOUNT', 40, 380);
+      doc.fillColor('#10b981').fontSize(24).text(`INR ${booking.totalAmount?.toLocaleString('en-IN')}`, 40, 400);
+
+      doc.fillColor('#64748b').fontSize(10).text('PAYMENT METHOD', 300, 380);
+      doc.fillColor('#0f172a').fontSize(14).text((booking.paymentMethod || 'PAYMENT GATEWAY').toUpperCase(), 300, 405);
+      
+      doc.fillColor('#94a3b8').fontSize(10).text('This is a computer generated premium ticket from SkyStay.', 40, 780, { align: 'center', width: 515 });
 
       doc.end();
     } catch (err) {
@@ -284,4 +301,72 @@ const bookingInvoiceEmail = (booking, user) => {
       <p style="color: #475569;">Hi ${user.name}, thank you for booking with us! Please find your official PDF invoice attached above.</p>
     </div>`
   };
+};
+
+const preTripEmailTemplate = (booking, user) => {
+  const dest = booking.bookingType === 'hotel' ? booking.hotel?.city : booking.flight?.to;
+  return {
+    subject: `Your Journey to ${dest} starts tomorrow! 🧳`,
+    html: `
+    <div style="font-family: sans-serif; max-width: 600px; margin: auto; background: #f8fafc; padding: 30px; border-radius: 12px;">
+      <h2 style="color: #0f172a;">Pack your bags, ${user.name.split(' ')[0]}!</h2>
+      <p style="color: #475569;">Your trip to <strong>${dest}</strong> is coming up in less than 24 hours.</p>
+      <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
+        <strong>Booking ID:</strong> #${booking.bookingId}<br/>
+        <strong>Status:</strong> Confirmed ✅
+      </div>
+      <a href="https://skystay-frontend-dusky.vercel.app/bookings" style="display:inline-block; padding: 12px 24px; background: #1a6ef5; color: white; text-decoration: none; border-radius: 6px;">Manage Booking</a>
+    </div>`
+  };
+};
+
+const postTripEmailTemplate = (booking, user) => {
+  return {
+    subject: `Welcome Home, ${user.name.split(' ')[0]}! How was your trip? ⭐`,
+    html: `
+    <div style="font-family: sans-serif; max-width: 600px; margin: auto; background: #f8fafc; padding: 30px; border-radius: 12px;">
+      <h2 style="color: #0f172a;">Welcome Back!</h2>
+      <p style="color: #475569;">We hope you had a fantastic luxury experience with SkyStay.</p>
+      <p style="color: #475569;">As a valued traveler, your feedback helps us elevate our services.</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="https://skystay-frontend-dusky.vercel.app/bookings" style="font-size: 24px; text-decoration: none; letter-spacing: 4px;">⭐⭐⭐⭐⭐</a>
+      </div>
+      <p style="color: #475569; font-size: 13px;">Leave a 5-star review and earn extra SkyPoints on your next booking!</p>
+    </div>`
+  };
+};
+
+const abandonedCartEmailTemplate = (booking, user) => {
+  const item = booking.bookingType === 'hotel' ? booking.hotel?.name : `Flight to ${booking.flight?.to}`;
+  return {
+    subject: `You left something behind! Complete your booking ⏳`,
+    html: `
+    <div style="font-family: sans-serif; max-width: 600px; margin: auto; background: #f8fafc; padding: 30px; border-radius: 12px;">
+      <h2 style="color: #0f172a;">Still thinking about it?</h2>
+      <p style="color: #475569;">Hi ${user.name}, you started a booking for <strong>${item}</strong> but didn't complete the payment.</p>
+      <p style="color: #ef4444; font-weight: bold;">Rooms and seats are filling up fast!</p>
+      <a href="https://skystay-frontend-dusky.vercel.app/profile" style="display:inline-block; padding: 12px 24px; background: #0f172a; color: white; text-decoration: none; border-radius: 6px; margin-top: 20px;">Complete Your Booking Now</a>
+    </div>`
+  };
+};
+
+exports.sendPreTripReminder = async (booking, user) => {
+  try {
+    const { subject, html } = preTripEmailTemplate(booking, user);
+    await transporter.sendMail({ from: `"SkyStay Concierge" <${process.env.EMAIL_USER}>`, to: user.email, subject, html });
+  } catch (err) { console.error('PreTrip email failed:', err.message); }
+};
+
+exports.sendPostTripReview = async (booking, user) => {
+  try {
+    const { subject, html } = postTripEmailTemplate(booking, user);
+    await transporter.sendMail({ from: `"SkyStay Experience" <${process.env.EMAIL_USER}>`, to: user.email, subject, html });
+  } catch (err) { console.error('PostTrip email failed:', err.message); }
+};
+
+exports.sendAbandonedCartReminder = async (booking, user) => {
+  try {
+    const { subject, html } = abandonedCartEmailTemplate(booking, user);
+    await transporter.sendMail({ from: `"SkyStay Booking" <${process.env.EMAIL_USER}>`, to: user.email, subject, html });
+  } catch (err) { console.error('AbandonedCart email failed:', err.message); }
 };

@@ -75,6 +75,13 @@ const bookingSchema = new mongoose.Schema({
   checkedIn: { type: Boolean, default: false },
   checkinTime: Date,
   boardingPass: String,
+  
+  // Email Automation Tracking
+  emailsSent: {
+    preTrip: { type: Boolean, default: false },
+    abandonedCart: { type: Boolean, default: false },
+    postTrip: { type: Boolean, default: false }
+  }
 }, { timestamps: true });
 
 bookingSchema.pre('save', function(next) {

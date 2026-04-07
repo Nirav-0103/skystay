@@ -98,17 +98,100 @@ const autoConfirmBookings = async () => {
   }
 };
 
+// ─── 4. EMAIL AUTOMATION ORCHESTRATORS ────────────────────────
+const sendPreTripReminders = async () => {
+  try {
+    const now = new Date();
+    const future = new Date(now.getTime() + 25 * 60 * 60 * 1000); // 25 hours
+    const bookings = await Booking.find({
+      status: 'confirmed',
+      'emailsSent.preTrip': false,
+    }).populate('user hotel flight');
+
+    let count = 0;
+    for (const b of bookings) {
+      let tripDate = null;
+      if (b.bookingType === 'hotel' && b.checkIn) tripDate = new Date(b.checkIn);
+      if (b.bookingType === 'flight' && b.flight?.departureTime) tripDate = new Date(b.flight.departureTime);
+      
+      if (tripDate && tripDate > now && tripDate < future) {
+        if (b.user?.email && typeof emailService.sendPreTripReminder === 'function') {
+          await emailService.sendPreTripReminder(b, b.user);
+        }
+        b.emailsSent.preTrip = true;
+        await b.save();
+        count++;
+      }
+    }
+    if(count > 0) console.log(`✅ [CRON] Sent ${count} Pre-Trip Reminder emails.`);
+  } catch (err) { console.error('❌ [CRON] Pre-trip error:', err.message); }
+};
+
+const sendPostTripReviews = async () => {
+  try {
+    const bookings = await Booking.find({
+      status: 'completed',
+      'emailsSent.postTrip': false,
+    }).populate('user hotel flight');
+
+    let count = 0;
+    for (const b of bookings) {
+       if (b.user?.email && typeof emailService.sendPostTripReview === 'function') {
+         await emailService.sendPostTripReview(b, b.user);
+       }
+       b.emailsSent.postTrip = true;
+       await b.save();
+       count++;
+    }
+    if(count > 0) console.log(`✅ [CRON] Sent ${count} Post-Trip Review emails.`);
+  } catch (err) { console.error('❌ [CRON] Post-trip error:', err.message); }
+};
+
+const sendAbandonedCartReminders = async () => {
+  try {
+    const oneHourAgo = new Date(Date.now() - 1 * 60 * 60 * 1000);
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const bookings = await Booking.find({
+      status: 'pending',
+      'emailsSent.abandonedCart': false,
+      createdAt: { $lt: oneHourAgo, $gt: twentyFourHoursAgo }
+    }).populate('user hotel flight');
+
+    let count = 0;
+    for (const b of bookings) {
+      if (b.user?.email && typeof emailService.sendAbandonedCartReminder === 'function') {
+         await emailService.sendAbandonedCartReminder(b, b.user);
+      }
+      b.emailsSent.abandonedCart = true;
+      await b.save();
+      count++;
+    }
+    if(count > 0) console.log(`✅ [CRON] Sent ${count} Abandoned Cart emails.`);
+  } catch (err) { console.error('❌ [CRON] Abandoned Cart error:', err.message); }
+};
+
 // ─── START ALL CRON JOBS ───────────────────────────────────────
 exports.startScheduler = () => {
-  // Every hour: Auto-complete and Auto-confirm
+  // Every hour: Auto-complete, auto-confirm, abandoned carts
   cron.schedule('0 * * * *', () => {
     autoCompleteBookings();
     autoConfirmBookings();
+    sendAbandonedCartReminders();
   }, { timezone: 'Asia/Kolkata' });
 
   // Daily report at 8:00 AM
   cron.schedule('0 8 * * *', () => {
     sendDailyReport();
+  }, { timezone: 'Asia/Kolkata' });
+
+  // Pre-Trip Reminders at 9:00 AM
+  cron.schedule('0 9 * * *', () => {
+    sendPreTripReminders();
+  }, { timezone: 'Asia/Kolkata' });
+
+  // Post-Trip Reviews at 10:00 AM
+  cron.schedule('0 10 * * *', () => {
+    sendPostTripReviews();
   }, { timezone: 'Asia/Kolkata' });
 
   console.log('✅ Automation scheduler started');
