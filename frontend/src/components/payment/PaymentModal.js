@@ -2,11 +2,11 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { FiCreditCard, FiSmartphone, FiHome } from 'react-icons/fi';
 
-const RAZORPAY_KEY_ID = 'rzp_test_STSHk0IKwsUFj1';
-
-export default function PaymentModal({ amount, bookingData, onSuccess, onClose, user }) {
+export default function PaymentModal({ amount, bookingData, onSuccess, onClose, user, razorpayKey }) {
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [loading, setLoading] = useState(false);
+  const walletBal = user?.walletBalance || 0;
+  const canUseWallet = walletBal >= amount;
 
   const isHotel = bookingData?.bookingType === 'hotel';
   const isFlight = bookingData?.bookingType === 'flight';
@@ -44,7 +44,7 @@ export default function PaymentModal({ amount, bookingData, onSuccess, onClose, 
     }
 
     const options = {
-      key: RAZORPAY_KEY_ID,
+      key: razorpayKey || 'rzp_test_Saa4MIHeMmOARW',
       amount: amount * 100,
       currency: 'INR',
       name: 'SkyStay',
@@ -113,10 +113,12 @@ export default function PaymentModal({ amount, bookingData, onSuccess, onClose, 
       id: 'wallet',
       label: 'SkyPay Wallet',
       icon: <span style={{ fontSize: '1.2rem' }}>💳</span>,
-      desc: `Balance: ₹${(user?.walletBalance || 0).toLocaleString()}`,
+      desc: canUseWallet
+        ? `Balance: ₹${walletBal.toLocaleString('en-IN')} ✅`
+        : `Balance: ₹${walletBal.toLocaleString('en-IN')} — Need ₹${(amount - walletBal).toLocaleString('en-IN')} more`,
       color: '#fbbf24',
       bg: '#fcf8eb',
-      disabled: (user?.walletBalance || 0) < amount
+      disabled: !canUseWallet
     },
     {
       id: 'card',

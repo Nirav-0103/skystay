@@ -89,6 +89,23 @@ exports.createBooking = async (req, res) => {
 
     const user = await User.findById(req.user._id);
     if (user) {
+      // ── Deduct wallet balance if paid via SkyPay Wallet ──
+      if (bookingData.paymentMethod === 'wallet') {
+        const totalToPay = bookingData.totalAmount || bookingData.baseAmount || 0;
+        if ((user.walletBalance || 0) < totalToPay) {
+          // Delete the booking we just created and reject
+          await Booking.findByIdAndDelete(booking._id);
+          return res.status(400).json({ success: false, message: 'Insufficient SkyPay Wallet balance' });
+        }
+        user.walletBalance = (user.walletBalance || 0) - totalToPay;
+        user.skyPointsHistory = user.skyPointsHistory || [];
+        user.skyPointsHistory.push({
+          points: -totalToPay,
+          type: 'spent',
+          description: `Booking #${booking.bookingId} paid via SkyPay Wallet`
+        });
+      }
+
       user.notifications.push({
         title: 'Booking Created! 📋',
         message: `Your booking for ${bookingData.bookingType === 'hotel' ? populated.hotel?.name : populated.flight?.airline} has been received.`,
@@ -97,7 +114,8 @@ exports.createBooking = async (req, res) => {
       await user.save();
     }
 
-    res.status(201).json({ success: true, booking: populated });
+    res.status(201).json({ success: true, booking: populated, walletBalance: user?.walletBalance });
+
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

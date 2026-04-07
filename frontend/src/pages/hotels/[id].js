@@ -31,7 +31,7 @@ function ImagePlaceholder({ name }) {
 export default function HotelDetail() {
   const router = useRouter();
   const { id } = router.query;
-  const { user } = useAuth() || {};
+  const { user, updateUser } = useAuth() || {};
   const { formatPrice = (p) => p?.toLocaleString() } = useCurrency() || {};
   const { addNotification = () => {} } = useNotifications() || {};
   const [hotel, setHotel] = useState(null);
@@ -118,6 +118,11 @@ export default function HotelDetail() {
       });
 
       if (!res.data.booking?._id) throw new Error('No booking ID returned');
+
+      // Update wallet balance in UI if paid via wallet
+      if (paymentMethod === 'wallet' && res.data.walletBalance !== undefined) {
+        updateUser({ ...user, walletBalance: res.data.walletBalance });
+      }
 
       if (paymentDetails.status === 'failed') {
         toast.error('Payment failed. An automatic refund has been initiated.');
@@ -492,6 +497,7 @@ export default function HotelDetail() {
           amount={total}
           bookingData={{ bookingType: 'hotel' }}
           user={user}
+          razorpayKey="rzp_test_Saa4MIHeMmOARW"
           onSuccess={handlePaymentSuccess}
           onClose={() => setShowPayment(false)}
         />
