@@ -116,22 +116,87 @@ const bookingConfirmedEmail = (booking, user) => {
 const bookingCancelledEmail = (booking, user) => {
   return {
     subject: `❌ Booking Cancelled #${booking.bookingId} — SkyStay`,
-    html: `<h1>Booking Cancelled</h1><p>Hi ${user.name}, your booking #${booking.bookingId} has been cancelled.</p>`
+    html: `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
+      <div style="background: #ef4444; padding: 20px; text-align: center; color: white;">
+        <h2 style="margin: 0; font-size: 24px;">Booking Cancelled</h2>
+      </div>
+      <div style="padding: 30px; color: #374151;">
+        <p>Hi <strong>${user.name}</strong>,</p>
+        <p>Your booking <strong>#${booking.bookingId}</strong> has been successfully cancelled as requested.</p>
+        <p>If a refund is applicable per our policy, it will be processed to your original payment method within 5-7 business days.</p>
+      </div>
+    </div>`
   };
 };
 
 const welcomeEmailTemplate = (user) => {
   const name = user.name || 'Traveler';
   return {
-    subject: `👋 Welcome to SkyStay, ${name}!`,
-    html: `<h1>Welcome to SkyStay, ${name}!</h1><p>We are glad to have you with us.</p>`
+    subject: `Welcome to SkyStay Premium, ${name}! ✨`,
+    html: `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 40px auto; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+      <div style="background: linear-gradient(135deg, #0d1b2e 0%, #1a6ef5 100%); padding: 50px 30px; text-align: center;">
+        <div style="font-size: 32px; font-weight: 800; color: white; letter-spacing: -1px;">✈️ SkyStay</div>
+        <p style="color: #bfdbfe; font-size: 16px; margin-top: 10px;">The Ultimate Luxury Travel Experience</p>
+      </div>
+      <div style="background: #ffffff; padding: 40px; text-align: center;">
+        <h1 style="color: #0d1b2e; font-size: 24px; font-weight: 800; margin-top: 0;">Hello, ${name}!</h1>
+        <p style="color: #64748b; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+          Welcome to the world's most premium flight and hotel booking platform. We are thrilled to have you on board! Explore hand-picked luxury stays and fly faster with SkyStay.
+        </p>
+        <a href="https://skystay-frontend-dusky.vercel.app/" style="display: inline-block; background: #0d1b2e; color: #ffffff; padding: 14px 32px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(13,27,46,0.3);">Explore Now</a>
+      </div>
+    </div>`
   };
 };
 
 const forgotPasswordEmailTemplate = (user, resetUrl) => {
   return {
-    subject: `🔑 Reset Your Password — SkyStay`,
-    html: `<p>Hi ${user.name}, click <a href="${resetUrl}">here</a> to reset your password.</p>`
+    subject: `Security Alert: Reset Your Password — SkyStay`,
+    html: `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 40px auto; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0;">
+      <div style="background: #0f172a; padding: 24px; text-align: center;">
+        <div style="font-size: 24px; font-weight: 800; color: white;">🛡️ SkyStay Security</div>
+      </div>
+      <div style="background: #ffffff; padding: 40px; text-align: center;">
+        <h2 style="color: #0f172a; font-size: 22px; margin-top: 0;">Password Reset Request</h2>
+        <p style="color: #475569; font-size: 15px; line-height: 1.6; margin-bottom: 30px;">
+          Hi <strong>${user.name}</strong>,<br>We received a request to reset the password associated with your SkyStay account. If you made this request, please click the button below to set a new password.
+        </p>
+        <a href="${resetUrl}" style="display: inline-block; background: #2563eb; color: #ffffff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">Reset Password</a>
+        <p style="color: #94a3b8; font-size: 13px; margin-top: 30px;">
+          If you didn't request a password reset, you can safely ignore this email. This link will expire in 1 hour.
+        </p>
+      </div>
+    </div>`
+  };
+};
+
+const walletTransactionEmailTemplate = (user, amount, balance) => {
+  return {
+    subject: `💳 SkyPay Wallet Top-Up Successful! (₹${amount})`,
+    html: `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 40px auto; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+      <div style="background: #fbbf24; padding: 30px; text-align: center;">
+        <div style="font-size: 28px; font-weight: 900; color: #78350f;">SkyPay Wallet</div>
+      </div>
+      <div style="background: #ffffff; padding: 40px; text-align: center;">
+        <div style="font-size: 48px; margin-bottom: 15px;">✅</div>
+        <h2 style="color: #0f172a; font-size: 24px; margin-top: 0;">Top-Up Successful</h2>
+        <p style="color: #475569; font-size: 16px;">
+          Hi <strong>${user.name}</strong>, your wallet has been successfully recharged using Razorpay.
+        </p>
+        <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin: 25px 0; border: 1px dashed #cbd5e1;">
+          <div style="color: #64748b; font-size: 14px; font-weight: 600; margin-bottom: 5px;">AMOUNT ADDED</div>
+          <div style="color: #10b981; font-size: 28px; font-weight: 800;">+ ₹${Number(amount).toLocaleString('en-IN')}</div>
+          <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+            <span style="color: #64748b; font-size: 14px;">Available Balance: </span>
+            <span style="color: #0f172a; font-weight: 700; font-size: 16px;">₹${Number(balance).toLocaleString('en-IN')}</span>
+          </div>
+        </div>
+      </div>
+    </div>`
   };
 };
 
@@ -183,7 +248,7 @@ exports.sendBookingInvoice = async (booking, user) => {
     const pdfBuffer = await generateInvoicePDF(booking, user);
 
     await transporter.sendMail({
-      from: `"SkyStay" <${process.env.EMAIL_USER}>`,
+      from: `"SkyStay Finance" <${process.env.EMAIL_USER}>`,
       to: user.email,
       subject,
       html,
@@ -195,9 +260,28 @@ exports.sendBookingInvoice = async (booking, user) => {
   }
 };
 
+exports.sendWalletTransactionEmail = async (user, amount, balance) => {
+  try {
+    const { subject, html } = walletTransactionEmailTemplate(user, amount, balance);
+    await transporter.sendMail({ 
+      from: `"SkyPay Wallet" <${process.env.EMAIL_USER}>`, 
+      to: user.email, 
+      subject, 
+      html 
+    });
+    console.log(`✅ Wallet transaction email sent → ${user.email}`);
+  } catch (err) {
+    console.error('❌ Wallet transaction email failed:', err.message);
+  }
+};
+
 const bookingInvoiceEmail = (booking, user) => {
   return {
-    subject: `🧾 Order Invoice — SkyStay #${booking.bookingId}`,
-    html: `<p>Hi ${user.name}, please find your invoice attached for booking #${booking.bookingId}.</p>`
+    subject: `🧾 Official Invoice: SkyStay #${booking.bookingId}`,
+    html: `
+    <div style="font-family: sans-serif; background: #f8fafc; padding: 40px; text-align: center;">
+      <h2 style="color: #0f172a;">Your Invoice is Ready</h2>
+      <p style="color: #475569;">Hi ${user.name}, thank you for booking with us! Please find your official PDF invoice attached above.</p>
+    </div>`
   };
 };

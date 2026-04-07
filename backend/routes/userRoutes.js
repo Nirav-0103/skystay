@@ -158,6 +158,11 @@ router.post('/wallet/verify', protect, async (req, res) => {
     });
 
     await user.save();
+    
+    // Send Automated Email Receipt
+    const emailService = require('../services/emailService');
+    emailService.sendWalletTransactionEmail(user, amount, user.walletBalance);
+
     res.json({ success: true, walletBalance: user.walletBalance });
 
   } catch (error) {

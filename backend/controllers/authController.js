@@ -141,27 +141,30 @@ exports.changePassword = async (req, res) => {
   }
 };
 
-exports.forgotPassword = async (req, res) => {
-  try {
-    const user = await User.findOne({ email: req.body.email });
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-
-    // Generate reset token
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    user.resetPasswordExpire = Date.now() + 60 * 60 * 1000; // 1 hour
-
-    await user.save({ validateBeforeSave: false });
-
-    // Create reset URL
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:42011'}/reset-password/${resetToken}`;
-
-    await emailService.sendForgotPasswordEmail(user, resetUrl);
-    res.json({ success: true, message: 'Password reset link sent to your email!' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+  exports.forgotPassword = async (req, res) => {
+    try {
+      const user = await User.findOne({ email: req.body.email });
+      if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+  
+      // Generate reset token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+      user.resetPasswordExpire = Date.now() + 60 * 60 * 1000; // 1 hour
+  
+      await user.save({ validateBeforeSave: false });
+  
+      // Create reset URL using req.headers.origin dynamically so it natively supports Vercel / Live domains
+      const originStr = req.headers.origin || req.headers.referer || process.env.FRONTEND_URL || 'http://localhost:3000';
+      const cleanOrigin = originStr.endsWith('/') ? originStr.slice(0, -1) : originStr;
+      
+      const resetUrl = `${cleanOrigin}/reset-password/${resetToken}`;
+  
+      await emailService.sendForgotPasswordEmail(user, resetUrl);
+      res.json({ success: true, message: 'Password reset link sent to your email!' });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
 
 exports.resetPassword = async (req, res) => {
   try {
