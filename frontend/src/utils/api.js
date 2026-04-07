@@ -113,10 +113,12 @@ export const adminAPI = {
   sendResetEmail: (id) => API.post(`/admin/users/${id}/reset-password`),
   deleteUser: (id) => API.delete(`/admin/users/${id}`),
   toggleUser: (id) => API.put(`/admin/users/${id}/toggle`),
+  addWalletCredit: (id, data) => API.post(`/admin/users/${id}/wallet-credit`, data),
   getPendingBookings: () => API.get('/admin/pending-bookings'),
   confirmBooking: (id) => API.put(`/admin/bookings/${id}/confirm`),
   rejectBooking: (id, reason) => API.put(`/admin/bookings/${id}/reject`, { reason }),
   syncSkyPoints: () => API.post('/admin/sync-skypoints'),
+
   // Refunds
   getAllRefunds: () => API.get('/admin/refunds'),
   updateRefundStage: (id, data) => API.put(`/admin/refunds/${id}/stage`, data),

@@ -282,6 +282,10 @@ export default function AdminDashboard() {
   const [syncingPoints, setSyncingPoints] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const adminFileInputRef = useRef(null);
+  const [walletCreditUser, setWalletCreditUser] = useState(null); // {_id, name}
+  const [walletCreditAmount, setWalletCreditAmount] = useState('');
+  const [walletCreditNote, setWalletCreditNote] = useState('');
+  const [walletCreditLoading, setWalletCreditLoading] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -468,6 +472,29 @@ export default function AdminDashboard() {
     try { await adminAPI.exportCSV(type); toast.success(`${type} CSV downloaded!`); }
     catch { toast.error('Export failed'); }
     setExportingCSV(false);
+  };
+
+  const handleWalletCredit = async (e) => {
+    e.preventDefault();
+    if (!walletCreditUser || !walletCreditAmount || Number(walletCreditAmount) <= 0) return;
+    setWalletCreditLoading(true);
+    try {
+      const res = await adminAPI.addWalletCredit(walletCreditUser._id, {
+        amount: Number(walletCreditAmount),
+        note: walletCreditNote
+      });
+      toast.success(res.data.message);
+      setUsers(prev => prev.map(u => u._id === walletCreditUser._id
+        ? { ...u, walletBalance: res.data.newBalance }
+        : u
+      ));
+      setWalletCreditUser(null);
+      setWalletCreditAmount('');
+      setWalletCreditNote('');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to credit wallet');
+    }
+    setWalletCreditLoading(false);
   };
 
   const handleTabChange = (tabId) => { setActiveTab(tabId); setSidebarOpen(false); };
@@ -1234,7 +1261,10 @@ export default function AdminDashboard() {
                           </td>
                           <td style={{ ...TD, color: 'var(--text-muted)', fontSize: '0.75rem' }}>{new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
                           <td style={TD}>
-                            <div style={{ display: 'flex', gap: 5 }}>
+                            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                              <Btn variant="success" onClick={() => { setWalletCreditUser(u); setWalletCreditAmount(''); setWalletCreditNote(''); }} style={{ padding: '4px 8px' }} title="Add Wallet Credit">
+                                💳
+                              </Btn>
                               <Btn variant="blue" onClick={() => handleResetPassword(u._id, u.name)} style={{ padding: '4px 8px' }} title="Reset Password">
                                 <FiRefreshCw size={11} />
                               </Btn>
@@ -1251,6 +1281,31 @@ export default function AdminDashboard() {
                 </div>
               </Card>
             </>
+          )}
+
+          {/* ── WALLET CREDIT MODAL ── */}
+          {walletCreditUser && (
+            <Modal title={`💳 Add Wallet Credit — ${walletCreditUser.name}`} onClose={() => setWalletCreditUser(null)}>
+              <form onSubmit={handleWalletCredit}>
+                <div style={{ background: 'linear-gradient(135deg,#d1fae5,#a7f3d0)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: '0.82rem', color: '#065f46', fontWeight: 600 }}>
+                  ⚡ Admin Override — No payment gateway required. Amount credited instantly.
+                </div>
+                <div style={{ marginBottom: 12 }}>
+                  <label style={labelStyle}>Amount (₹) <span style={{ color: '#ef4444' }}>*</span></label>
+                  <input style={inputStyle} type="number" min="1" placeholder="e.g. 50000" value={walletCreditAmount} onChange={e => setWalletCreditAmount(e.target.value)} required autoFocus />
+                </div>
+                <div style={{ marginBottom: 16 }}>
+                  <label style={labelStyle}>Note / Reason (optional)</label>
+                  <input style={inputStyle} type="text" placeholder="e.g. Refund compensation, Promo credit..." value={walletCreditNote} onChange={e => setWalletCreditNote(e.target.value)} />
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button type="button" onClick={() => setWalletCreditUser(null)} style={{ flex: 1, padding: '10px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer', fontSize: '0.88rem' }}>Cancel</button>
+                  <button type="submit" disabled={walletCreditLoading} style={{ flex: 2, padding: '10px', borderRadius: 9, border: 'none', background: '#10b981', color: 'white', fontWeight: 700, cursor: walletCreditLoading ? 'not-allowed' : 'pointer', fontSize: '0.88rem', opacity: walletCreditLoading ? 0.7 : 1 }}>
+                    {walletCreditLoading ? 'Crediting...' : `💳 Credit ₹${walletCreditAmount || '0'} to Wallet`}
+                  </button>
+                </div>
+              </form>
+            </Modal>
           )}
 
           {/* ── ADMINS ── */}
