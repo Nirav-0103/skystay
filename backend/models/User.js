@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema({
   }],
   wishlistHotels: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Hotel' }],
   wishlistFlights: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Flight' }],
+  walletBalance: { type: Number, default: 0 },
   skyPoints: { type: Number, default: 0 },
   skyPointsHistory: [{
     points: Number,

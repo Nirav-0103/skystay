@@ -110,6 +110,15 @@ export default function PaymentModal({ amount, bookingData, onSuccess, onClose, 
   // ✅ FIX: Flight booking માટે COD/Pay at Hotel option show નહીં થાય
   const allPaymentOptions = [
     {
+      id: 'wallet',
+      label: 'SkyPay Wallet',
+      icon: <span style={{ fontSize: '1.2rem' }}>💳</span>,
+      desc: `Balance: ₹${(user?.walletBalance || 0).toLocaleString()}`,
+      color: '#fbbf24',
+      bg: '#fcf8eb',
+      disabled: (user?.walletBalance || 0) < amount
+    },
+    {
       id: 'card',
       label: 'Credit / Debit Card',
       icon: <FiCreditCard size={22} color="#1a6ef5" />,
@@ -144,8 +153,27 @@ export default function PaymentModal({ amount, bookingData, onSuccess, onClose, 
     }] : [])
   ];
 
-  const handlePay = () => {
+  const handlePay = async () => {
     if (paymentMethod === 'cod') { handlePayAtHotel(); return; }
+    
+    // Handle SkyPay Wallet
+    if (paymentMethod === 'wallet') {
+      if ((user?.walletBalance || 0) < amount) {
+        toast.error('Insufficient SkyPay Wallet balance! Please top up your wallet in Profile.');
+        return;
+      }
+      setLoading(true);
+      try {
+        await onSuccess('wallet', { transactionId: 'TXN_SKY_' + Date.now() });
+        toast.success('Payment successful via SkyPay Wallet! 🎉');
+        onClose();
+      } catch (err) {
+        toast.error('Booking failed');
+      }
+      setLoading(false);
+      return;
+    }
+
     handleRazorpay(paymentMethod);
   };
 
@@ -176,14 +204,16 @@ export default function PaymentModal({ amount, bookingData, onSuccess, onClose, 
         {/* Payment Methods */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
           {allPaymentOptions.map(opt => (
-            <div key={opt.id} onClick={() => setPaymentMethod(opt.id)}
-              style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 'var(--radius-md)', border: `2px solid ${paymentMethod === opt.id ? opt.color : 'var(--border)'}`, background: paymentMethod === opt.id ? opt.bg : 'white', cursor: 'pointer', transition: 'all 0.15s' }}>
+            <div key={opt.id} onClick={() => !opt.disabled && setPaymentMethod(opt.id)}
+              style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 'var(--radius-md)', border: `2px solid ${paymentMethod === opt.id ? opt.color : 'var(--border)'}`, background: paymentMethod === opt.id ? opt.bg : 'white', cursor: opt.disabled ? 'not-allowed' : 'pointer', transition: 'all 0.15s', opacity: opt.disabled ? 0.6 : 1 }}>
               <div style={{ width: 42, height: 42, background: paymentMethod === opt.id ? opt.bg : 'var(--bg)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 {opt.icon}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--text-primary)' }}>{opt.label}</div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{opt.desc}</div>
+                <div style={{ fontSize: '0.78rem', color: opt.disabled && opt.id === 'wallet' ? '#ef4444' : 'var(--text-muted)' }}>
+                  {opt.disabled && opt.id === 'wallet' ? `Need ₹${(amount - (user?.walletBalance || 0)).toLocaleString()} more` : opt.desc}
+                </div>
               </div>
               {/* UPI logos */}
               {opt.id === 'upi' && (

@@ -6,7 +6,7 @@ import Footer from '../components/common/Footer';
 import { useAuth } from '../context/AuthContext';
 import { authAPI, uploadAPI } from '../utils/api';
 import toast from 'react-hot-toast';
-import { FiUser, FiLock, FiBookmark, FiCamera, FiEdit2, FiX } from 'react-icons/fi';
+import { FiUser, FiLock, FiBookmark, FiCamera, FiEdit2, FiX, FiCreditCard, FiStar, FiTrendingUp } from 'react-icons/fi';
 import Link from 'next/link';
 
 export default function ProfilePage() {
@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [addMoneyAmount, setAddMoneyAmount] = useState('');
 
   useEffect(() => {
     if (authLoading) return;
@@ -95,6 +96,23 @@ export default function ProfilePage() {
       toast.success('Password changed successfully!');
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err) { toast.error(err.response?.data?.message || 'Failed to change password'); }
+    setSaving(false);
+  };
+
+  const handleAddMoney = async (e) => {
+    e.preventDefault();
+    if (!addMoneyAmount || addMoneyAmount <= 0) return toast.error('Enter a valid amount');
+    setSaving(true);
+    try {
+      const res = await authAPI.addWalletFunds({ amount: Number(addMoneyAmount) });
+      if (res.data.success) {
+        updateUser({ ...user, walletBalance: res.data.walletBalance });
+        toast.success(`₹${addMoneyAmount} added to SkyPay Wallet!`);
+        setAddMoneyAmount('');
+      }
+    } catch (err) {
+      toast.error('Failed to add money');
+    }
     setSaving(false);
   };
 
@@ -204,6 +222,7 @@ export default function ProfilePage() {
         <div style={{ display: 'flex', gap: 4, marginBottom: 32, background: 'white', borderRadius: 'var(--radius-full)', padding: 4, border: '1px solid var(--border)', width: 'fit-content' }}>
           {[
             { id: 'profile', label: 'Profile', icon: <FiUser size={15} /> },
+            { id: 'wallet', label: 'SkyPay Wallet', icon: <FiCreditCard size={15} /> },
             { id: 'password', label: 'Password', icon: <FiLock size={15} /> },
             { id: 'bookings', label: 'Bookings', icon: <FiBookmark size={15} /> }
           ].map(t => (
@@ -268,6 +287,47 @@ export default function ProfilePage() {
                 {saving ? 'Changing...' : 'Change Password'}
               </button>
             </form>
+          </div>
+        )}
+
+        {tab === 'wallet' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+            <div style={{ background: 'linear-gradient(135deg, #0d1b2e 0%, #1a6ef5 100%)', borderRadius: 'var(--radius-xl)', padding: 32, color: 'white', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', right: -20, top: -20, opacity: 0.1, transform: 'scale(3)' }}>
+                <FiCreditCard size={100} />
+              </div>
+              <h3 style={{ fontWeight: 600, fontSize: '1rem', opacity: 0.8, marginBottom: 8 }}>SkyPay Balance</h3>
+              <div style={{ fontSize: '3rem', fontWeight: 800, fontFamily: 'Syne', marginBottom: 24 }}>₹{(user.walletBalance || 0).toLocaleString()}</div>
+              
+              <form onSubmit={handleAddMoney} style={{ background: 'rgba(255,255,255,0.1)', padding: 20, borderRadius: 'var(--radius-lg)', backdropFilter: 'blur(10px)' }}>
+                <div style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 12 }}>Add Funds to Wallet</div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <input type="number" min="100" placeholder="Amount (e.g. 5000)" value={addMoneyAmount} onChange={e => setAddMoneyAmount(e.target.value)} required style={{ flex: 1, padding: '10px 16px', borderRadius: 'var(--radius-md)', border: 'none', outline: 'none' }} />
+                  <button type="submit" disabled={saving} style={{ padding: '10px 20px', background: '#fbbf24', color: '#0d1b2e', border: 'none', borderRadius: 'var(--radius-md)', fontWeight: 700, cursor: 'pointer' }}>
+                    {saving ? 'Adding...' : 'Add'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div style={{ background: 'white', borderRadius: 'var(--radius-xl)', padding: 32, border: '1px solid var(--border)' }}>
+              <h3 style={{ fontWeight: 700, fontSize: '1.2rem', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FiStar color="#fbbf24" fill="#fbbf24" /> Loyalty Tier
+              </h3>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>{user.loyaltyTier || 'Blue'} Member</div>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{user.skyPoints || 0} SkyPoints</div>
+                </div>
+                <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
+                  {user.loyaltyTier === 'Platinum' ? '💎' : user.loyaltyTier === 'Gold' ? '🥇' : user.loyaltyTier === 'Silver' ? '🥈' : '🔷'}
+                </div>
+              </div>
+              <div style={{ background: 'var(--bg)', height: 8, borderRadius: 4, overflow: 'hidden', marginBottom: 8 }}>
+                <div style={{ height: '100%', background: 'linear-gradient(90deg, #fbbf24, #f59e0b)', width: `${Math.min(100, ((user.skyPoints || 0) / 15000) * 100)}%` }} />
+              </div>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Earn 100 SkyPoints per ₹1000 spent. Next tier unlocks exclusive perks.</p>
+            </div>
           </div>
         )}
 

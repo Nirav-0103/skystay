@@ -85,4 +85,28 @@ router.post('/saved-passengers', protect, async (req, res) => {
   }
 });
 
+// SkyPay Wallet
+router.post('/wallet/add', protect, async (req, res) => {
+  try {
+    const { amount } = req.body;
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid amount' });
+    }
+    const user = await User.findById(req.user._id);
+    user.walletBalance = (user.walletBalance || 0) + Number(amount);
+    
+    // Add transaction history for wallet (optional, appending to skyPointsHistory for now)
+    user.skyPointsHistory.push({
+      points: amount,
+      type: 'earned',
+      description: `Added ₹${amount} to SkyPay Wallet`
+    });
+
+    await user.save();
+    res.json({ success: true, walletBalance: user.walletBalance });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;

@@ -10,7 +10,7 @@ import {
   FiMoon, FiSun, FiHeart, FiBriefcase,
   FiPercent, FiStar, FiGlobe, FiChevronRight,
   FiChevronDown, FiX, FiMenu, FiRefreshCw, FiTrash2, FiClock,
-  FiCheckCircle, FiEye
+  FiCheckCircle, FiEye, FiZap
 } from "react-icons/fi";
 import { MdFlight, MdHotel, MdMap } from "react-icons/md";
 
@@ -89,6 +89,7 @@ export default function Navbar() {
   };
 
   const NAV_LINKS = [
+    { href: "/ai-trip-planner", label: "AI Planner", icon: <FiZap size={17} />,    color: "#eab308" },
     { href: "/hotels",       label: "Hotels",   icon: <MdHotel size={17} />,   color: "#2563eb" },
     { href: "/flights",      label: "Flights",  icon: <MdFlight size={17} />,  color: "#7c3aed" },
     { href: "/deals",        label: "Deals",    icon: <FiPercent size={15} />, color: "#d97706" },
@@ -335,7 +336,10 @@ export default function Navbar() {
                         <div className={`px-5 py-4 border-b ${isDark ? "border-white/5 bg-slate-900" : "border-gray-50 bg-white/50"}`}>
                           <div className={`font-bold ${isDark ? "text-white" : "text-gray-800"}`}>{user.name}</div>
                           <div className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} truncate`}>{user.email}</div>
-                          {user.loyaltyTier && <div className="text-xs text-amber-600 mt-1">🏅 {user.loyaltyTier}</div>}
+                          <div className="flex items-center gap-3 mt-1">
+                            {user.loyaltyTier && <div className="text-xs text-amber-600 font-bold">🏅 {user.loyaltyTier}</div>}
+                            <div className="text-xs text-green-600 font-bold">💳 ₹{(user.walletBalance || 0).toLocaleString()}</div>
+                          </div>
                         </div>
                         <div className="py-2">
                           {PROFILE_LINKS.map((item) => (
@@ -396,7 +400,10 @@ export default function Navbar() {
                 </div>
                 <div>
                   <div className={`font-semibold ${isDark ? "text-white" : "text-gray-800"} text-sm`}>{user.name}</div>
-                  <div className="text-xs text-yellow-500">⭐ {user.skyPoints?.toLocaleString()} SkyPoints</div>
+                  <div className="flex items-center gap-3 mt-0.5">
+                    <div className="text-xs text-yellow-500 font-bold">⭐ {user.skyPoints?.toLocaleString()} Pts</div>
+                    <div className="text-xs text-green-600 font-bold">💳 ₹{(user.walletBalance || 0).toLocaleString()}</div>
+                  </div>
                 </div>
               </div>
             ) : (
