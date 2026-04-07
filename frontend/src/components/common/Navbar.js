@@ -163,7 +163,7 @@ export default function Navbar() {
             <div className="p-2 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 transition group-hover:scale-105 shadow-[0_8px_16px_rgba(37,99,235,0.2)] shrink-0">
               <MdFlight size={20} color="white" />
             </div>
-            <div className={`overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${scrolled ? 'max-w-0 opacity-0 ml-0' : 'max-w-[120px] opacity-100 ml-2'}`}>
+            <div className={`overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${scrolled ? 'max-w-0 opacity-0 ml-0' : 'max-w-[200px] opacity-100 ml-2'}`}>
               <span className={`text-2xl font-black tracking-[-0.05em] whitespace-nowrap ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: 'Syne, sans-serif' }}>
                 SkyStay
               </span>
