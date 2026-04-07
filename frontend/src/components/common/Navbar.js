@@ -131,13 +131,32 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-500 
-        ${scrolled
-          ? (isDark ? "bg-slate-950/90 backdrop-blur-2xl shadow-2xl border-b border-white/5" : "bg-white/90 backdrop-blur-xl shadow-md border-b border-gray-200")
-          : (isDark ? "bg-slate-950/80 backdrop-blur-xl border-b border-white/5 shadow-lg" : "bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm")
-        }`}>
+      {/* Container wrapper for the floating island effect */}
+      <div className={`fixed top-0 w-full z-50 pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${scrolled ? 'pt-6 px-4 md:px-8' : 'pt-0 px-0'}`}>
+        
+        <nav className={`pointer-events-auto mx-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden
+          ${scrolled 
+            ? `max-w-5xl rounded-[32px] ${isDark ? 'bg-slate-900/60 border border-white/10' : 'bg-white/60 border border-black/5'} shadow-2xl`
+            : `max-w-full rounded-none ${isDark ? 'bg-slate-900/80 border-b border-white/5' : 'bg-white/80 border-b border-black/5'} shadow-sm`
+          }`}
+          style={{
+            backdropFilter: 'blur(36px) saturate(200%)',
+            WebkitBackdropFilter: 'blur(36px) saturate(200%)',
+            boxShadow: scrolled 
+              ? (isDark ? 'inset 0 1px 1px rgba(255,255,255,0.1), 0 32px 64px rgba(0,0,0,0.4)' : 'inset 0 1px 1px rgba(255, 255, 255, 0.8), 0 32px 64px rgba(0,0,0,0.08)')
+              : 'none'
+          }}
+        >
+        
+        {/* Animated Gloss Shine (Apple signature detail) */}
+        {scrolled && (
+          <div className="absolute inset-0 pointer-events-none z-[-1]" style={{
+             background: 'linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0) 100%)',
+             opacity: isDark ? 0.05 : 0.4
+          }} />
+        )}
 
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className={`mx-auto px-6 flex items-center justify-between transition-all duration-700 ${scrolled ? 'py-3' : 'py-4 max-w-7xl'}`}>
 
           {/* LOGO */}
           <Link href="/" onClick={closeAll} className="flex items-center gap-2 cursor-pointer group">
@@ -506,6 +525,7 @@ export default function Navbar() {
           </div>
         )}
       </nav>
+      </div>
 
       {showAuth && (
         <AuthModal 
