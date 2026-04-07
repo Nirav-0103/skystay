@@ -219,13 +219,13 @@ export default function Home() {
           </div>
         </div>
 
-        <style jsx>{`
+        <style dangerouslySetInnerHTML={{ __html: `
           @media (max-width: 640px) {
             .search-grid { grid-template-columns: 1fr !important; }
             .ai-search-container { border-radius: 16px !important; }
             .ai-search-container input { padding: 12px 16px !important; }
           }
-        `}</style>
+        `}} />
       </section>
 
       {/* AI Trip Planner Banner */}
@@ -349,23 +349,17 @@ export default function Home() {
 
       {showTripPlanner && <TripPlanner onClose={() => setShowTripPlanner(false)} />}
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes floatPlane {
           0%, 100% { transform: translateY(-50%) rotateZ(-5deg) translateX(0); }
           25% { transform: translateY(-55%) rotateZ(0deg) translateX(10px); }
           50% { transform: translateY(-45%) rotateZ(5deg) translateX(-5px); }
           75% { transform: translateY(-52%) rotateZ(-2deg) translateX(8px); }
         }
-        .floating-plane {
-          animation: floatPlane 8s ease-in-out infinite;
-        }
-        .tilt-card {
-          will-change: transform;
-        }
-        @media (max-width: 640px) {
-          .floating-plane { display: none !important; }
-        }
-      `}</style>
+        .floating-plane { animation: floatPlane 8s ease-in-out infinite; }
+        .tilt-card { will-change: transform; }
+        @media (max-width: 640px) { .floating-plane { display: none !important; } }
+      `}} />
     </>
   );
 }
