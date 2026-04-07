@@ -110,7 +110,7 @@ router.post('/wallet/razorpay-order', protect, async (req, res) => {
     const order = await razorpay.orders.create({
       amount: Math.round(amount * 100), // paise
       currency: 'INR',
-      receipt: `rcpt_${req.user._id}_${Date.now()}`
+      receipt: `rcpt_${String(req.user._id).slice(-8)}_${Date.now().toString().slice(-8)}`
     });
 
     res.json({ success: true, order, key: rzpId });
