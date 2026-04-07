@@ -142,6 +142,19 @@ const autoInit = async () => {
     console.log(`✅ Admin exists → ${adminEmail}`);
   }
 
+  // 1.5 Fix any broken astronomical wallet balances from prior testing
+  try {
+    const result = await User.updateMany(
+      { walletBalance: { $gt: 10000000000 } }, // Capped to 10,000 Crores
+      { $set: { walletBalance: 100000000 } }   // Reset to 10 Crores
+    );
+    if (result.modifiedCount > 0) {
+      console.log(`✅ Reset ${result.modifiedCount} broken wallet balances to 10 Crore`);
+    }
+  } catch (e) {
+    console.log('Error cleaning wallets:', e);
+  }
+
   // 2. Seed Hotels & Flights only if DB is empty
   const [hotelCount, flightCount] = await Promise.all([
     Hotel.countDocuments(),

@@ -383,7 +383,7 @@ export default function Navbar() {
                           <div className={`text-xs ${isDark ? "text-slate-400" : "text-gray-500"} truncate`}>{user.email}</div>
                           <div className="flex items-center gap-3 mt-1">
                             {user.loyaltyTier && <div className="text-xs text-amber-600 font-bold">🏅 {user.loyaltyTier}</div>}
-                            <div className="text-xs text-green-600 font-bold">💳 ₹{(user.walletBalance || 0).toLocaleString()}</div>
+                            <div className="text-xs text-green-600 font-bold">💳 {(user.walletBalance || 0) >= 1e7 ? `₹${((user.walletBalance || 0) / 1e7).toFixed(2)} Cr` : (user.walletBalance || 0) >= 1e5 ? `₹${((user.walletBalance || 0) / 1e5).toFixed(1)} L` : `₹${(user.walletBalance || 0).toLocaleString('en-IN')}`}</div>
                           </div>
                         </div>
                         <div className="py-2">
@@ -446,8 +446,8 @@ export default function Navbar() {
                 <div>
                   <div className={`font-semibold ${isDark ? "text-white" : "text-gray-800"} text-sm`}>{user.name}</div>
                   <div className="flex items-center gap-3 mt-0.5">
-                    <div className="text-xs text-yellow-500 font-bold">⭐ {user.skyPoints?.toLocaleString()} Pts</div>
-                    <div className="text-xs text-green-600 font-bold">💳 ₹{(user.walletBalance || 0).toLocaleString()}</div>
+                    <div className="text-xs text-yellow-500 font-bold">⭐ {(user.skyPoints || 0) >= 1e5 ? `${((user.skyPoints || 0) / 1e5).toFixed(1)}L` : (user.skyPoints || 0).toLocaleString()} Pts</div>
+                    <div className="text-xs text-green-600 font-bold">💳 {(user.walletBalance || 0) >= 1e7 ? `₹${((user.walletBalance || 0) / 1e7).toFixed(2)} Cr` : (user.walletBalance || 0) >= 1e5 ? `₹${((user.walletBalance || 0) / 1e5).toFixed(1)} L` : `₹${(user.walletBalance || 0).toLocaleString('en-IN')}`}</div>
                   </div>
                 </div>
               </div>
