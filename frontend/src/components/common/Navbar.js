@@ -143,7 +143,7 @@ export default function Navbar() {
             <div className="p-2 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 transition group-hover:scale-105">
               <MdFlight size={20} color="white" />
             </div>
-            <span className={`text-lg font-semibold tracking-wide ${isDark ? "text-white" : "text-gray-800"}`}>
+            <span className={`text-2xl font-black tracking-[-0.05em] ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: 'Syne, sans-serif' }}>
               SkyStay
             </span>
           </Link>
