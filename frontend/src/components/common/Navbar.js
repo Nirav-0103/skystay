@@ -134,7 +134,7 @@ export default function Navbar() {
       {/* Container wrapper for the floating island effect */}
       <div className={`fixed top-0 w-full z-50 pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${scrolled ? 'pt-6 px-4 md:px-8' : 'pt-0 px-0'}`}>
         
-        <nav className={`pointer-events-auto mx-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden
+        <nav className={`relative pointer-events-auto mx-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]
           ${scrolled 
             ? `max-w-5xl rounded-[32px] ${isDark ? 'bg-slate-900/60 border border-white/10' : 'bg-white/60 border border-black/5'} shadow-2xl`
             : `max-w-full rounded-none ${isDark ? 'bg-slate-900/80 border-b border-white/5' : 'bg-white/80 border-b border-black/5'} shadow-sm`
@@ -150,7 +150,7 @@ export default function Navbar() {
         
         {/* Animated Gloss Shine (Apple signature detail) */}
         {scrolled && (
-          <div className="absolute inset-0 pointer-events-none z-[-1]" style={{
+          <div className="absolute inset-0 pointer-events-none rounded-[32px] z-[-1]" style={{
              background: 'linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0) 100%)',
              opacity: isDark ? 0.05 : 0.4
           }} />
@@ -160,12 +160,9 @@ export default function Navbar() {
 
           {/* LOGO */}
           <Link href="/" onClick={closeAll} className="flex items-center gap-2 cursor-pointer group">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 transition group-hover:scale-105">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 transition group-hover:scale-105 shadow-[0_8px_16px_rgba(37,99,235,0.2)]">
               <MdFlight size={20} color="white" />
             </div>
-            <span className={`text-2xl font-black tracking-[-0.05em] ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: 'Syne, sans-serif' }}>
-              SkyStay
-            </span>
           </Link>
 
           {/* NAV LINKS — Desktop */}
