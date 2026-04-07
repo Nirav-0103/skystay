@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useRouter } from 'next/router';
 import { FiStar } from 'react-icons/fi';

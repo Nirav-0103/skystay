@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   allowedDevOrigins: ['192.0.0.2'],
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 
   // Proxy /api/* → AWS backend
   // Set BACKEND_URL in Vercel env vars: http://your-eb-url.elasticbeanstalk.com

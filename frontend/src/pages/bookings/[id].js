@@ -9,9 +9,9 @@ import { useAuth } from '../../context/AuthContext';
 import { FiCheck, FiClock, FiMapPin, FiDownload, FiShare2 } from 'react-icons/fi';
 import { MdFlight, MdHotel } from 'react-icons/md';
 import toast from 'react-hot-toast';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
-import BoardingPass from '../../components/flight/BoardingPass';
+import dynamic from 'next/dynamic';
+
+const BoardingPass = dynamic(() => import('../../components/flight/BoardingPass'), { ssr: false });
 
 const statusConfig = {
   confirmed: { color: '#10b981', bg: '#d1fae5', icon: '✅', label: 'Confirmed' },
@@ -51,7 +51,10 @@ export default function BookingDetail() {
       // Temporarily show to calculate styles correctly
       passElement.style.left = '0px';
       passElement.style.zIndex = '-99';
-      
+      // Dynamically import to avoid SSR 'window is not defined' issue
+      const html2canvas = (await import('html2canvas')).default;
+      const { jsPDF } = await import('jspdf');
+
       const canvas = await html2canvas(passElement, {
         scale: 2, // High resolution
         useCORS: true,

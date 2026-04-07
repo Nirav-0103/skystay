@@ -4,6 +4,7 @@ import { CurrencyProvider } from '../context/CurrencyContext';
 import { ThemeProvider } from '../context/ThemeContext';
 import { Toaster } from 'react-hot-toast';
 import AIChatbot from '../components/common/AIChatbot';
+import 'leaflet/dist/leaflet.css';
 import '../styles/globals.css';
 
 export default function App({ Component, pageProps }) {
