@@ -35,24 +35,42 @@ export default function ProfilePage() {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB');
-      return;
-    }
-
     setUploading(true);
-    const toastId = toast.loading('Uploading image...');
+    const toastId = toast.loading('Resizing and uploading image...');
+    
     try {
-      const res = await uploadAPI.avatar(file);
+      // Client-side compression using Canvas
+      const img = new Image();
+      const objUrl = URL.createObjectURL(file);
+      img.src = objUrl;
+      
+      await new Promise(resolve => { img.onload = resolve; });
+      
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 400;
+      const scaleSize = MAX_WIDTH / img.width;
+      canvas.width = MAX_WIDTH;
+      canvas.height = img.height * scaleSize;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      
+      // Convert to blob (compress to 80% JPEG)
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+      const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", { type: 'image/jpeg' });
+      URL.revokeObjectURL(objUrl);
+
+      // Upload Compressed File
+      const res = await uploadAPI.avatar(compressedFile);
       if (res.data.success) {
         setProfileForm(prev => ({ ...prev, avatar: res.data.url }));
-        // Also update the user immediately
         const updateRes = await authAPI.updateProfile({ ...profileForm, avatar: res.data.url });
         updateUser(updateRes.data.user);
         toast.success('Profile picture updated!', { id: toastId });
       }
     } catch (err) {
-      toast.error('Failed to upload image', { id: toastId });
+      console.error('Upload Error:', err);
+      toast.error(err.response?.data?.message || 'Failed to upload image. Server may be down.', { id: toastId });
     } finally {
       setUploading(false);
     }
