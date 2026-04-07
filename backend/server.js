@@ -53,6 +53,7 @@ const allowedOrigins = [
   'http://localhost:4200',
   'http://localhost:42011',
   'https://skystay-nine.vercel.app',
+  'https://skystay-frontend-dusky.vercel.app',
 ];
 
 app.use(cors({
