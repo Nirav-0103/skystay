@@ -37,9 +37,149 @@ export default function BookingDetail() {
 
   const handleDownloadBoardingPass = async () => {
     const isHotel = booking.bookingType === 'hotel';
+
     if (isHotel) {
-       window.print();
-       return;
+      const loadingToast = toast.loading('Generating Invoice PDF...');
+      try {
+        const { jsPDF } = await import('jspdf');
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const W = 210, pageH = 297;
+
+        // ── Background ──────────────────────────────────────────
+        doc.setFillColor(13, 27, 46);
+        doc.rect(0, 0, W, 50, 'F');
+
+        // ── Logo / Brand ────────────────────────────────────────
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.text('SkyStay', 14, 22);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(191, 219, 254);
+        doc.text('Premium Hotel & Flight Booking', 14, 30);
+
+        // ── INVOICE label (right side) ──────────────────────────
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.text('INVOICE', 196, 22, { align: 'right' });
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(191, 219, 254);
+        doc.text(`#${booking.bookingId}`, 196, 30, { align: 'right' });
+        doc.text(`Date: ${new Date(booking.createdAt).toLocaleDateString('en-IN')}`, 196, 37, { align: 'right' });
+
+        // ── Divider ──────────────────────────────────────────────
+        doc.setDrawColor(26, 110, 245);
+        doc.setLineWidth(0.8);
+        doc.line(14, 55, 196, 55);
+
+        // ── Billed To ────────────────────────────────────────────
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(148, 163, 184);
+        doc.text('BILLED TO', 14, 64);
+        doc.setFontSize(12);
+        doc.setTextColor(15, 23, 42);
+        doc.setFont('helvetica', 'bold');
+        doc.text(user?.name || 'Valued Guest', 14, 72);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100, 116, 139);
+        doc.text(user?.email || '', 14, 79);
+        if (user?.phone) doc.text(user.phone, 14, 85);
+
+        // ── Hotel Details (right) ─────────────────────────────────
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(148, 163, 184);
+        doc.text('PROPERTY', 140, 64);
+        doc.setFontSize(11);
+        doc.setTextColor(15, 23, 42);
+        doc.setFont('helvetica', 'bold');
+        doc.text(booking.hotel?.name || '', 140, 72, { maxWidth: 56 });
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100, 116, 139);
+        doc.text(booking.hotel?.city || '', 140, 80);
+
+        // ── Table Header ─────────────────────────────────────────
+        doc.setFillColor(248, 250, 252);
+        doc.rect(14, 96, 182, 9, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(100, 116, 139);
+        doc.text('DESCRIPTION', 18, 102);
+        doc.text('CHECK-IN', 100, 102);
+        doc.text('NIGHTS', 138, 102);
+        doc.text('AMOUNT', 185, 102, { align: 'right' });
+
+        // ── Table Row ─────────────────────────────────────────────
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(15, 23, 42);
+        doc.text(`${booking.hotel?.name} – ${booking.roomType}`, 18, 113, { maxWidth: 75 });
+        doc.text(new Date(booking.checkIn).toLocaleDateString('en-IN'), 100, 113);
+        doc.text(`${booking.nights}`, 138, 113);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`INR ${booking.totalAmount?.toLocaleString('en-IN')}`, 185, 113, { align: 'right' });
+
+        // ── Divider ──────────────────────────────────────────────
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.4);
+        doc.line(14, 122, 196, 122);
+
+        // ── Payment Method ────────────────────────────────────────
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(100, 116, 139);
+        doc.text('Payment Method:', 140, 131);
+        doc.setTextColor(15, 23, 42);
+        doc.setFont('helvetica', 'bold');
+        const pmLabel = booking.paymentMethod === 'cod' ? 'Pay at Hotel' : (booking.paymentMethod || 'Online').toUpperCase();
+        doc.text(pmLabel, 185, 131, { align: 'right' });
+
+        // ── Total Box ─────────────────────────────────────────────
+        doc.setFillColor(26, 110, 245);
+        doc.roundedRect(120, 138, 76, 20, 3, 3, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.text('TOTAL AMOUNT', 158, 146, { align: 'center' });
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.text(`INR ${booking.totalAmount?.toLocaleString('en-IN')}`, 158, 154, { align: 'center' });
+
+        // ── Status Badge ──────────────────────────────────────────
+        const sColor = booking.status === 'confirmed' ? [16, 185, 129] : booking.status === 'cancelled' ? [239, 68, 68] : [245, 158, 11];
+        doc.setFillColor(...sColor);
+        doc.roundedRect(14, 140, 38, 10, 2, 2, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.text(booking.status?.toUpperCase(), 33, 147, { align: 'center' });
+
+        // ── Divider ──────────────────────────────────────────────
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.5);
+        doc.line(14, 170, 196, 170);
+
+        // ── Footer ───────────────────────────────────────────────
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.text('Thank you for choosing SkyStay Premium.', W / 2, 180, { align: 'center' });
+        doc.text('This is a computer-generated invoice and does not require a physical signature.', W / 2, 186, { align: 'center' });
+        doc.text('For support: support@skystay.com  |  1800-123-4567 (24/7)', W / 2, 192, { align: 'center' });
+
+        doc.save(`SkyStay_Invoice_${booking.bookingId}.pdf`);
+        toast.success('Invoice Downloaded!', { id: loadingToast });
+      } catch (err) {
+        console.error(err);
+        toast.error('Failed to generate PDF', { id: loadingToast });
+      }
+      return;
     }
     
     // Flight PDF Generation
@@ -80,6 +220,7 @@ export default function BookingDetail() {
       passElement.style.left = '-9999px'; // Ensure it's hidden
     }
   };
+
 
   const handleShare = async () => {
     if (sharing) return;
