@@ -10,21 +10,10 @@ exports.createBooking = async (req, res) => {
   try {
     const bookingData = { ...req.body, user: req.user._id };
 
-    // Overlap check for hotels
+    // Hotel booking calculations
     if (bookingData.bookingType === 'hotel') {
       const checkIn = new Date(bookingData.checkIn);
       const checkOut = new Date(bookingData.checkOut);
-      const overlapping = await Booking.findOne({
-        user: req.user._id, bookingType: 'hotel',
-        status: { $in: ['pending', 'confirmed'] },
-        $or: [
-          { checkIn: { $lt: checkOut, $gte: checkIn } },
-          { checkOut: { $gt: checkIn, $lte: checkOut } },
-          { checkIn: { $lte: checkIn }, checkOut: { $gte: checkOut } }
-        ],
-        _id: { $ne: bookingData._id } // Exclude self if update
-      });
-      if (overlapping) return res.status(400).json({ success: false, message: 'You already have a booking for these dates! 📅' });
 
       const hotel = await Hotel.findById(bookingData.hotel);
       if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
