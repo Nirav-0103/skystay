@@ -8,9 +8,6 @@ import TripPlanner from '../components/common/TripPlanner';
 import { hotelAPI, aiAPI } from '../utils/api';
 import { FiMapPin, FiCalendar, FiUsers, FiSearch, FiZap, FiStar } from 'react-icons/fi';
 import { MdFlight, MdHotel, MdSecurity, MdSupportAgent } from 'react-icons/md';
-import dynamic from 'next/dynamic';
-
-const Hero3D = dynamic(() => import('../components/common/Hero3D'), { ssr: false });
 
 const CITIES = ['Mumbai', 'Delhi', 'Goa', 'Bangalore', 'Chennai', 'Kolkata', 'Jaipur', 'Udaipur', 'Hyderabad', 'Pune'];
 const POPULAR_DESTINATIONS = [
@@ -91,18 +88,20 @@ export default function Home() {
       <Navbar />
 
       {/* HERO */}
-      <section style={{ position: 'relative', minHeight: 640, display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-        
-        {/* Deep Space / Premium Dark Background */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 0, background: 'radial-gradient(circle at 50% 50%, #0d1b2e 0%, #050b14 100%)' }} />
+      <section style={{ position: 'relative', minHeight: 580, display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+          <img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1600" alt="hero" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(13,27,46,0.92) 0%, rgba(26,58,110,0.85) 50%, rgba(26,110,245,0.75) 100%)' }} />
+        </div>
 
-        {/* 3D Antigravity Floating Globe */}
-        <Hero3D />
+        {/* Animated particles */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden' }}>
+          {[...Array(6)].map((_, i) => (
+            <div key={i} style={{ position: 'absolute', width: 2, height: 2, background: 'rgba(255,255,255,0.4)', borderRadius: '50%', left: `${15 + i * 15}%`, top: `${20 + (i % 3) * 25}%`, animation: `float ${3 + i * 0.5}s ease-in-out ${i * 0.3}s infinite` }} />
+          ))}
+        </div>
 
-        {/* Minimal gradient overlay for text readability at the bottom */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 0, background: 'linear-gradient(to bottom, rgba(5,11,20,0) 60%, rgba(5,11,20,1) 100%)', pointerEvents: 'none' }} />
-
-        <div className="container" style={{ position: 'relative', zIndex: 1, padding: '40px 24px', transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)', opacity: heroVisible ? 1 : 0, transform: heroVisible ? 'translateY(0)' : 'translateY(20px)', width: '100%' }}>
+        <div className="container" style={{ position: 'relative', zIndex: 1, paddingTop: 60, paddingBottom: 60, width: '100%' }}>
           <div style={{ textAlign: 'center', marginBottom: 36, opacity: heroVisible ? 1 : 0, transform: heroVisible ? 'translateY(0)' : 'translateY(30px)', transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 'var(--radius-full)', padding: '6px 16px', marginBottom: 16 }}>
               <FiStar size={12} color="#fbbf24" fill="#fbbf24" />
