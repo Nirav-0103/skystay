@@ -51,31 +51,33 @@ export default function GlobeScene() {
       const glowMat = new THREE.MeshBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.1, side: THREE.BackSide, blending: THREE.AdditiveBlending });
       globe.add(new THREE.Mesh(glowGeo, glowMat));
 
-      // Aura / Premium Waves around the Earth
+      // Aura / Premium Waves around the Earth (360 degrees)
       const waves = [];
-      const waveCount = 5;
+      const waveCount = 35;
       
       for (let i = 0; i < waveCount; i++) {
-        const waveGeo = new THREE.TorusGeometry(2.1 + (i * 0.1), 0.005, 16, 100);
+        // Dynamic radius for 360 layered effect
+        const radius = 2.05 + (Math.random() * 0.45); 
+        const waveGeo = new THREE.TorusGeometry(radius, 0.002 + Math.random() * 0.004, 16, 120);
         const waveMat = new THREE.MeshBasicMaterial({ 
           color: 0xf5d580, // Luxury gold/champagne color
           transparent: true, 
-          opacity: 0.3 - (i * 0.05),
+          opacity: 0.1 + Math.random() * 0.15,
           blending: THREE.AdditiveBlending
         });
         const wave = new THREE.Mesh(waveGeo, waveMat);
         
-        // Random initial rotations
-        wave.rotation.x = Math.random() * Math.PI;
-        wave.rotation.y = Math.random() * Math.PI;
-        wave.rotation.z = Math.random() * Math.PI;
+        // Random initial rotations all around the sphere
+        wave.rotation.x = Math.random() * Math.PI * 2;
+        wave.rotation.y = Math.random() * Math.PI * 2;
+        wave.rotation.z = Math.random() * Math.PI * 2;
         
         // Save custom animation data
         wave.userData = {
-          speedX: (Math.random() - 0.5) * 0.003,
-          speedY: (Math.random() - 0.5) * 0.003,
-          speedZ: (Math.random() - 0.5) * 0.003,
-          pulseSpeed: 1 + Math.random() * 2,
+          speedX: (Math.random() - 0.5) * 0.005,
+          speedY: (Math.random() - 0.5) * 0.005,
+          speedZ: (Math.random() - 0.5) * 0.005,
+          pulseSpeed: 0.5 + Math.random() * 1.5,
           pulsePhase: Math.random() * Math.PI * 2,
           baseScale: 1
         };
