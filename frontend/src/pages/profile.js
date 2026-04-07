@@ -5,6 +5,7 @@ import Script from 'next/script';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import { useAuth } from '../context/AuthContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { authAPI, adminAPI, uploadAPI } from '../utils/api';
 import toast from 'react-hot-toast';
 import { FiUser, FiLock, FiBookmark, FiCamera, FiEdit2, FiX, FiCreditCard, FiStar, FiTrendingUp } from 'react-icons/fi';
@@ -12,6 +13,7 @@ import Link from 'next/link';
 
 export default function ProfilePage() {
   const { user, updateUser, loading: authLoading, isAdmin } = useAuth();
+  const { currency, currencies } = useCurrency();
   const router = useRouter();
   const fileInputRef = useRef(null);
   const [tab, setTab] = useState('profile');
@@ -370,12 +372,29 @@ export default function ProfilePage() {
 
         {tab === 'wallet' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-            <div style={{ background: 'linear-gradient(135deg, #0d1b2e 0%, #1a6ef5 100%)', borderRadius: 'var(--radius-xl)', padding: 32, color: 'white', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ background: 'linear-gradient(135deg, #0d1b2e 0%, #1a6ef5 100%)', borderRadius: 'var(--radius-xl)', padding: 32, color: 'white', position: 'relative' }}>
               <div style={{ position: 'absolute', right: -20, top: -20, opacity: 0.1, transform: 'scale(3)' }}>
                 <FiCreditCard size={100} />
               </div>
               <h3 style={{ fontWeight: 600, fontSize: '1rem', opacity: 0.8, marginBottom: 8 }}>SkyPay Balance</h3>
-              <div style={{ fontSize: '3rem', fontWeight: 800, fontFamily: 'Syne', marginBottom: 24 }}>₹{(user.walletBalance || 0).toLocaleString()}</div>
+              {(() => {
+                const balINR = user.walletBalance || 0;
+                const { symbol, rate } = currencies[currency] || { symbol: '₹', rate: 1 };
+                const converted = balINR * rate;
+                const formatted = converted.toLocaleString(undefined, { maximumFractionDigits: 2 });
+                const display = `${symbol}${formatted}`;
+                const fontSize = display.length > 12 ? '1.6rem' : display.length > 9 ? '2.2rem' : '3rem';
+                return (
+                  <div style={{ fontSize, fontWeight: 800, fontFamily: 'Syne', marginBottom: 24, wordBreak: 'break-all', lineHeight: 1.2 }}>
+                    {display}
+                    {currency !== 'INR' && (
+                      <div style={{ fontSize: '0.75rem', opacity: 0.7, fontWeight: 500, marginTop: 4 }}>
+                        ≈ ₹{balINR.toLocaleString('en-IN')} INR
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
               
               <form onSubmit={handleAddMoney} style={{ background: 'rgba(255,255,255,0.1)', padding: 20, borderRadius: 'var(--radius-lg)', backdropFilter: 'blur(10px)' }}>
                 <div style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 12 }}>Add Funds to Wallet</div>
