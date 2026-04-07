@@ -381,17 +381,35 @@ export default function ProfilePage() {
                 const balINR = user.walletBalance || 0;
                 const { symbol, rate } = currencies[currency] || { symbol: '₹', rate: 1 };
                 const converted = balINR * rate;
-                const formatted = converted.toLocaleString(undefined, { maximumFractionDigits: 2 });
-                const display = `${symbol}${formatted}`;
-                const fontSize = display.length > 12 ? '1.6rem' : display.length > 9 ? '2.2rem' : '3rem';
+
+                // Smart formatter - never overflows
+                const fmtNum = (n) => {
+                  if (n >= 1e7) return `${symbol}${(n / 1e7).toFixed(2)} Cr`;
+                  if (n >= 1e5) return `${symbol}${(n / 1e5).toFixed(1)} L`;
+                  return `${symbol}${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+                };
+
+                const display = fmtNum(converted);
+                const fontSize = display.length > 14 ? '1.8rem' : display.length > 10 ? '2.2rem' : '3rem';
+                const rawINR = balINR >= 1e7
+                  ? `₹${(balINR / 1e7).toFixed(2)} Cr`
+                  : balINR >= 1e5
+                  ? `₹${(balINR / 1e5).toFixed(1)} L`
+                  : `₹${balINR.toLocaleString('en-IN')}`;
+
                 return (
-                  <div style={{ fontSize, fontWeight: 800, fontFamily: 'Syne', marginBottom: 24, wordBreak: 'break-all', lineHeight: 1.2 }}>
-                    {display}
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ fontSize, fontWeight: 800, fontFamily: 'Syne', lineHeight: 1.1 }}>
+                      {display}
+                    </div>
                     {currency !== 'INR' && (
                       <div style={{ fontSize: '0.75rem', opacity: 0.7, fontWeight: 500, marginTop: 4 }}>
-                        ≈ ₹{balINR.toLocaleString('en-IN')} INR
+                        ≈ {rawINR} INR
                       </div>
                     )}
+                    <div style={{ fontSize: '0.7rem', opacity: 0.5, marginTop: 2 }}>
+                      Exact: ₹{balINR.toLocaleString('en-IN')}
+                    </div>
                   </div>
                 );
               })()}

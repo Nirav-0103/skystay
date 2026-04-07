@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
   skyPoints: { type: Number, default: 0 },
   skyPointsHistory: [{
     points: Number,
-    type: { type: String, enum: ['earned', 'redeemed'] },
+    type: { type: String, enum: ['earned', 'redeemed', 'spent', 'credited'] },
     description: String,
     createdAt: { type: Date, default: Date.now }
   }],
