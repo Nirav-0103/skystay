@@ -4,6 +4,9 @@ import { CurrencyProvider } from '../context/CurrencyContext';
 import { ThemeProvider } from '../context/ThemeContext';
 import { Toaster } from 'react-hot-toast';
 import AIChatbot from '../components/common/AIChatbot';
+import dynamic from 'next/dynamic';
+
+const LuxuryCursor = dynamic(() => import('../components/common/LuxuryCursor'), { ssr: false });
 import 'leaflet/dist/leaflet.css';
 import '../styles/globals.css';
 
@@ -18,6 +21,7 @@ export default function App({ Component, pageProps }) {
               success: { iconTheme: { primary: '#10b981', secondary: 'white' } },
               error: { iconTheme: { primary: '#ef4444', secondary: 'white' } }
             }} />
+            <LuxuryCursor />
             <Component {...pageProps} />
             <AIChatbot />
           </NotificationProvider>

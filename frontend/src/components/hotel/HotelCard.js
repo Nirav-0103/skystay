@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../context/CurrencyContext';
@@ -10,6 +10,8 @@ import { MdPool, MdSpa, MdRestaurant } from 'react-icons/md';
 const amenityIcons = { WiFi: <FiWifi size={12}/>, Pool: <MdPool size={12}/>, Spa: <MdSpa size={12}/>, Restaurant: <MdRestaurant size={12}/> };
 
 export default function HotelCard({ hotel }) {
+  const cardRef = useRef(null);
+  const glowRef = useRef(null);
   const { user, updateUser } = useAuth() || {};
   const { formatPrice = (p) => p?.toLocaleString() } = useCurrency() || {};
   const [liked, setLiked] = useState(false);
@@ -44,10 +46,50 @@ export default function HotelCard({ hotel }) {
 
   const img = hotel.images?.[0] || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600';
 
+  // 3D Tilt Effect Logic
+  const handleMouseMove = (e) => {
+    if (!cardRef.current || !glowRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Calculate rotation (-10 to 10 degrees max)
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = ((y - centerY) / centerY) * -10;
+    const rotateY = ((x - centerX) / centerX) * 10;
+    
+    cardRef.current.style.transform = `perspective(1000px) scale3d(1.02, 1.02, 1.02) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    
+    // Dynamic Golden Glow reflecting angle
+    glowRef.current.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255,255,255,0.15), transparent 40%)`;
+  };
+
+  const handleMouseLeave = () => {
+    if (!cardRef.current || !glowRef.current) return;
+    cardRef.current.style.transform = 'perspective(1000px) scale3d(1, 1, 1) rotateX(0deg) rotateY(0deg)';
+    glowRef.current.style.background = 'transparent';
+  };
+
   return (
-    <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-light)', overflow: 'hidden', transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer' }}
-      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.12)'; e.currentTarget.style.borderColor = 'rgba(26,110,245,0.2)'; }}
-      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; e.currentTarget.style.borderColor = 'var(--border-light)'; }}>
+    <div 
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ 
+        background: 'var(--bg-card)', 
+        borderRadius: 'var(--radius-lg)', 
+        border: '1px solid var(--border-light)', 
+        overflow: 'hidden', 
+        transition: 'transform 0.15s ease-out, box-shadow 0.15s ease-out', // Super fast transition for true hardware 3D feeling
+        cursor: 'pointer',
+        position: 'relative',
+        willChange: 'transform'
+      }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 30px 60px rgba(0,0,0,0.2)'; e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.4)'; }}
+    >
+      {/* 3D Glass Surface Glow */}
+      <div ref={glowRef} style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none', transition: 'background 0.15s ease' }} />
 
       {/* Image */}
       <div style={{ position: 'relative', height: 200, overflow: 'hidden', background: '#f0f0f0' }}>
