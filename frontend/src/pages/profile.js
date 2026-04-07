@@ -5,13 +5,13 @@ import Script from 'next/script';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import { useAuth } from '../context/AuthContext';
-import { authAPI, uploadAPI } from '../utils/api';
+import { authAPI, adminAPI, uploadAPI } from '../utils/api';
 import toast from 'react-hot-toast';
 import { FiUser, FiLock, FiBookmark, FiCamera, FiEdit2, FiX, FiCreditCard, FiStar, FiTrendingUp } from 'react-icons/fi';
 import Link from 'next/link';
 
 export default function ProfilePage() {
-  const { user, updateUser, loading: authLoading } = useAuth();
+  const { user, updateUser, loading: authLoading, isAdmin } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef(null);
   const [tab, setTab] = useState('profile');
@@ -122,9 +122,28 @@ export default function ProfilePage() {
     e.preventDefault();
     if (!addMoneyAmount || addMoneyAmount <= 0) return toast.error('Enter a valid amount');
     setSaving(true);
-    
+
+    // ── ADMIN BYPASS: No Razorpay, direct credit ──────────────────────────────
+    if (isAdmin) {
+      try {
+        const res = await adminAPI.addWalletCredit(user._id, {
+          amount: Number(addMoneyAmount),
+          note: 'Self top-up by admin'
+        });
+        if (res.data.success) {
+          updateUser({ ...user, walletBalance: res.data.newBalance });
+          toast.success(`₹${addMoneyAmount} added to your wallet instantly! ⚡`);
+          setAddMoneyAmount('');
+        }
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Failed to add money');
+      }
+      setSaving(false);
+      return;
+    }
+
+    // ── REGULAR USER: Razorpay gateway ───────────────────────────────────────
     try {
-      // 1. Create Order on Backend
       const { data } = await authAPI.createRazorpayOrder({ amount: Number(addMoneyAmount) });
       
       if (!data.success) {
@@ -133,7 +152,6 @@ export default function ProfilePage() {
         return;
       }
 
-      // 2. Configure Razorpay Pop-up
       const options = {
         key: data.key,
         amount: data.order.amount,
@@ -144,12 +162,10 @@ export default function ProfilePage() {
         handler: async function (response) {
           const verifyToast = toast.loading('Verifying payment...');
           try {
-            // 3. Verify Payment Signature
             const verifyRes = await authAPI.verifyRazorpayPayment({
               ...response,
               amount: Number(addMoneyAmount)
             });
-
             if (verifyRes.data.success) {
               updateUser({ ...user, walletBalance: verifyRes.data.walletBalance });
               toast.success(`₹${addMoneyAmount} successfully added to Wallet!`, { id: verifyToast });
@@ -159,19 +175,9 @@ export default function ProfilePage() {
             toast.error('Payment verification failed. If money was deducted, it will be refunded.', { id: verifyToast });
           }
         },
-        prefill: {
-          name: user.name,
-          email: user.email,
-          contact: user.phone || ""
-        },
-        theme: {
-          color: "#2563EB"
-        },
-        modal: {
-          ondismiss: function() {
-            setSaving(false);
-          }
-        }
+        prefill: { name: user.name, email: user.email, contact: user.phone || "" },
+        theme: { color: "#2563EB" },
+        modal: { ondismiss: function() { setSaving(false); } }
       };
 
       const paymentObject = new window.Razorpay(options);
@@ -179,7 +185,6 @@ export default function ProfilePage() {
         toast.error('Payment failed: ' + response.error.description);
         setSaving(false);
       });
-      
       paymentObject.open();
 
     } catch (err) {
