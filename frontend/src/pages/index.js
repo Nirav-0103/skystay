@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
+import MagneticButton from '../components/common/MagneticButton';
+import { motion } from 'framer-motion';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import HotelCard from '../components/hotel/HotelCard';
@@ -123,11 +125,13 @@ export default function Home() {
                 onKeyDown={e => e.key === 'Enter' && handleAISearch()}
                 placeholder="Try: 'Beach hotel in Goa under ₹10000'"
                 style={{ flex: 1, padding: '16px 20px', border: 'none', outline: 'none', fontSize: '0.88rem', background: 'transparent', color: 'var(--text-primary)' }} />
-              <button onClick={handleAISearch} disabled={aiLoading}
-                style={{ padding: '12px 24px', background: 'linear-gradient(135deg, var(--primary), #0e4fc4)', color: 'white', border: 'none', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'var(--transition)', flexShrink: 0 }}>
-                {aiLoading ? <span className="loader" style={{ width: 16, height: 16, borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)', borderTopColor: 'white' }} /> : <FiSearch size={16} />}
-                <span className="desktop-only">Search</span>
-              </button>
+              <MagneticButton>
+                <button onClick={handleAISearch} disabled={aiLoading}
+                  style={{ padding: '12px 24px', background: 'linear-gradient(135deg, var(--primary), #0e4fc4)', color: 'white', border: 'none', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'var(--transition)', flexShrink: 0, borderRadius: 'var(--radius-full)' }}>
+                  {aiLoading ? <span className="loader" style={{ width: 16, height: 16, borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)', borderTopColor: 'white' }} /> : <FiSearch size={16} />}
+                  <span className="desktop-only">Search</span>
+                </button>
+              </MagneticButton>
             </div>
             <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.72rem' }}>Powered by Skystay AI • Describe your perfect trip</p>
           </div>
@@ -171,9 +175,11 @@ export default function Home() {
                     {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </div>
-                <button className="btn btn-primary btn-lg" onClick={searchHotels} style={{ whiteSpace: 'nowrap', width: '100%', height: 48, borderRadius: 'var(--radius-md)' }}>
-                  <FiSearch size={18} /> Search
-                </button>
+                <MagneticButton style={{ width: '100%' }}>
+                  <button className="btn btn-primary btn-lg" onClick={searchHotels} style={{ whiteSpace: 'nowrap', width: '100%', height: 48, borderRadius: 'var(--radius-md)' }}>
+                    <FiSearch size={18} /> Search
+                  </button>
+                </MagneticButton>
               </div>
             ) : (
               <>
@@ -210,9 +216,11 @@ export default function Home() {
                       {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n}</option>)}
                     </select>
                   </div>
-                  <button className="btn btn-accent btn-lg" onClick={searchFlights} style={{ whiteSpace: 'nowrap', width: '100%', height: 48, borderRadius: 'var(--radius-md)' }}>
-                    <FiSearch size={18} /> Search
-                  </button>
+                  <MagneticButton style={{ width: '100%' }}>
+                    <button className="btn btn-accent btn-lg" onClick={searchFlights} style={{ whiteSpace: 'nowrap', width: '100%', height: 48, borderRadius: 'var(--radius-md)' }}>
+                      <FiSearch size={18} /> Search
+                    </button>
+                  </MagneticButton>
                 </div>
               </>
             )}
@@ -246,9 +254,11 @@ export default function Home() {
                 <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', marginTop: 2 }}>Get a personalized luxury itinerary in seconds</p>
               </div>
             </div>
-            <button className="btn btn-gold btn-lg" onClick={() => setShowTripPlanner(true)} style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <FiZap size={18} /> Generate My Trip Plan ✨
-            </button>
+            <MagneticButton>
+              <button className="btn btn-gold btn-lg" onClick={() => setShowTripPlanner(true)} style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FiZap size={18} /> Generate My Trip Plan ✨
+              </button>
+            </MagneticButton>
           </div>
         </div>
       </section>
@@ -291,9 +301,9 @@ export default function Home() {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
               {featuredHotels.map((hotel, i) => (
-                <div key={hotel._id} style={{ animation: `fadeInUp 0.5s ease ${i * 0.1}s both` }}>
+                <motion.div key={hotel._id} initial={{ opacity: 0, y: 50, scale: 0.95 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true, margin: '-50px' }} transition={{ duration: 0.6, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}>
                   <HotelCard hotel={hotel} />
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
@@ -312,9 +322,10 @@ export default function Home() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
             {POPULAR_DESTINATIONS.map((dest, i) => (
-              <div key={dest.city} className="tilt-card" onClick={() => router.push(`/hotels?city=${dest.city}`)}
-                style={{ position: 'relative', height: 250, borderRadius: 'var(--radius-xl)', overflow: 'hidden', cursor: 'pointer', boxShadow: 'var(--shadow-md)', animation: `fadeInUp 0.5s ease ${i * 0.1}s both`, transition: 'transform 0.4s cubic-bezier(0.03, 0.98, 0.52, 0.99), box-shadow 0.4s', transformStyle: 'preserve-3d', perspective: '800px' }}
-                onMouseMove={e => {
+              <motion.div key={dest.city} initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-50px' }} transition={{ duration: 0.6, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}>
+                <div className="tilt-card" onClick={() => router.push(`/hotels?city=${dest.city}`)}
+                  style={{ position: 'relative', height: 250, borderRadius: 'var(--radius-xl)', overflow: 'hidden', cursor: 'pointer', boxShadow: 'var(--shadow-md)', transition: 'transform 0.4s cubic-bezier(0.03, 0.98, 0.52, 0.99), box-shadow 0.4s', transformStyle: 'preserve-3d', perspective: '800px' }}
+                  onMouseMove={e => {
                   const rect = e.currentTarget.getBoundingClientRect();
                   const x = (e.clientX - rect.left) / rect.width - 0.5;
                   const y = (e.clientY - rect.top) / rect.height - 0.5;
@@ -340,7 +351,8 @@ export default function Home() {
                   <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: 2 }}>{dest.hotels} Hotels</div>
                 </div>
               </div>
-            ))}
+            </motion.div>
+          ))}
           </div>
         </div>
       </section>

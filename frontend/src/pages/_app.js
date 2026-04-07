@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic';
 const LuxuryCursor = dynamic(() => import('../components/common/LuxuryCursor'), { ssr: false });
 import 'leaflet/dist/leaflet.css';
 import '../styles/globals.css';
+import SmoothScroll from '../components/common/SmoothScroll';
 
 export default function App({ Component, pageProps }) {
   return (
@@ -16,14 +17,16 @@ export default function App({ Component, pageProps }) {
       <AuthProvider>
         <CurrencyProvider>
           <NotificationProvider>
-            <Toaster position="top-right" containerStyle={{ zIndex: 10000000 }} toastOptions={{
-              style: { fontFamily: 'Plus Jakarta Sans, sans-serif', borderRadius: '12px', fontSize: '0.9rem', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' },
-              success: { iconTheme: { primary: '#10b981', secondary: 'white' } },
-              error: { iconTheme: { primary: '#ef4444', secondary: 'white' } }
-            }} />
-            <LuxuryCursor />
-            <Component {...pageProps} />
-            <AIChatbot />
+            <SmoothScroll>
+              <Toaster position="top-right" containerStyle={{ zIndex: 10000000 }} toastOptions={{
+                style: { fontFamily: 'Plus Jakarta Sans, sans-serif', borderRadius: '12px', fontSize: '0.9rem', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' },
+                success: { iconTheme: { primary: '#10b981', secondary: 'white' } },
+                error: { iconTheme: { primary: '#ef4444', secondary: 'white' } }
+              }} />
+              <LuxuryCursor />
+              <Component {...pageProps} />
+              <AIChatbot />
+            </SmoothScroll>
           </NotificationProvider>
         </CurrencyProvider>
       </AuthProvider>

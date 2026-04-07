@@ -54,13 +54,13 @@ export default function LuxuryCursor() {
         }}
       />
       {/* Global CSS to enhance the luxury feel for the body */}
-      <style global jsx>{`
+      <style dangerouslySetInnerHTML={{__html: `
         body {
           /* Add subtle luxury dark grid texture globally */
           background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
           background-size: 30px 30px;
         }
-      `}</style>
+      `}} />
     </>
   );
 }
