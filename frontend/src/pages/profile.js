@@ -375,7 +375,7 @@ export default function ProfilePage() {
               <form onSubmit={handleAddMoney} style={{ background: 'rgba(255,255,255,0.1)', padding: 20, borderRadius: 'var(--radius-lg)', backdropFilter: 'blur(10px)' }}>
                 <div style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 12 }}>Add Funds to Wallet</div>
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <input type="number" min="100" placeholder="Amount (e.g. 5000)" value={addMoneyAmount} onChange={e => setAddMoneyAmount(e.target.value)} required style={{ flex: 1, padding: '10px 16px', borderRadius: 'var(--radius-md)', border: 'none', outline: 'none' }} />
+                  <input type="number" min="100" placeholder="Amount (e.g. 5000)" value={addMoneyAmount} onChange={e => setAddMoneyAmount(e.target.value)} required style={{ flex: 1, padding: '10px 16px', borderRadius: 'var(--radius-md)', border: 'none', outline: 'none', color: '#0d1b2e', background: 'white', fontSize: '1rem', fontWeight: 600 }} />
                   <button type="submit" disabled={saving} style={{ padding: '10px 20px', background: '#fbbf24', color: '#0d1b2e', border: 'none', borderRadius: 'var(--radius-md)', fontWeight: 700, cursor: 'pointer' }}>
                     {saving ? 'Adding...' : 'Add'}
                   </button>
