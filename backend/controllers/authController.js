@@ -17,7 +17,7 @@ exports.register = async (req, res) => {
     const user = await User.create({ name, email, password, phone });
 
     // ✅ Send Welcome Email
-    emailService.sendWelcomeEmail(user);
+    emailService.sendWelcomeEmail(user).catch(e => console.error('Welcome email err:', e));
 
     const token = generateToken(user._id);
     res.status(201).json({ success: true, token, user });
@@ -159,7 +159,7 @@ exports.changePassword = async (req, res) => {
       
       const resetUrl = `${cleanOrigin}/reset-password/${resetToken}`;
   
-      await emailService.sendForgotPasswordEmail(user, resetUrl);
+      await emailService.sendForgotPasswordEmail(user, resetUrl).catch(e => console.error('Reset email err:', e));
       res.json({ success: true, message: 'Password reset link sent to your email!' });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });

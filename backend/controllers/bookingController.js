@@ -85,7 +85,8 @@ exports.createBooking = async (req, res) => {
       .populate('hotel', 'name city address images')
       .populate('flight', 'flightNumber airline from to departureTime arrivalTime');
 
-    emailService.sendBookingInvoice(populated, populated.user);
+    // Await email delivery in background to avoid exiting before it fires
+    emailService.sendBookingInvoice(populated, populated.user).catch(e => console.error('Invoice email err:', e));
 
     const user = await User.findById(req.user._id);
     if (user) {
@@ -163,7 +164,7 @@ exports.cancelBooking = async (req, res) => {
     await booking.save();
 
     const user = await User.findById(req.user._id);
-    emailService.sendCancellationEmail(booking, user);
+    emailService.sendBookingCancelled(booking, user).catch(e => console.error('Cancel email err:', e));
 
     res.json({ success: true, message: 'Booking cancelled' });
   } catch (error) {
@@ -256,8 +257,9 @@ exports.updateBookingStatus = async (req, res) => {
         .populate('hotel', 'name city address images')
         .populate('flight', 'flightNumber airline from to departureTime arrivalTime');
       
-      emailService.sendBookingConfirmed(populated, populated.user);
-      emailService.sendBookingInvoice(populated, populated.user);
+      // Await email delivery gracefully
+      await emailService.sendBookingConfirmed(populated, populated.user).catch(e => console.error('Confirmed email err:', e));
+      await emailService.sendBookingInvoice(populated, populated.user).catch(e => console.error('Invoice email err:', e));
     }
 
     const user = await User.findById(booking.user);

@@ -28,7 +28,7 @@ const SECTIONS = [
 export default function FlightDetail() {
   const router = useRouter();
   const { id, passengers: qPass = 1, class: qClass = 'Economy' } = router.query;
-  const { user, refreshUser } = useAuth();
+  const { user, updateUser, refreshUser } = useAuth();
   const { formatPrice } = useCurrency();
   const [flight, setFlight] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -43,7 +43,6 @@ export default function FlightDetail() {
   const [savedPassengers, setSavedPassengers] = useState([]);
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(null);
-  const [animated, setAnimated] = useState(false);
 
   const VALID_PROMOS = { 'SKY10': 0.10, 'FIRST20': 0.20, 'SKYSTAY15': 0.15 };
 
@@ -60,7 +59,6 @@ export default function FlightDetail() {
     flightAPI.getById(id).then(r => {
       setFlight(r.data.flight);
       setLoading(false);
-      setTimeout(() => setAnimated(true), 100);
     }).catch(() => setLoading(false));
   }, [id]);
 
@@ -131,6 +129,11 @@ export default function FlightDetail() {
 
       if (!res.data.booking?._id) throw new Error('No booking ID returned');
 
+      // ✅ Update wallet balance in UI if paid via wallet
+      if (paymentMethod === 'wallet' && res.data.walletBalance !== undefined && updateUser) {
+        updateUser({ ...user, walletBalance: res.data.walletBalance });
+      }
+
       // 🔹 Save passenger info if checked
       const toSave = passengerDetails.filter(p => p.saveInfo);
       if (toSave.length > 0) {
@@ -178,8 +181,8 @@ export default function FlightDetail() {
         <div style={{ position: 'absolute', inset: 0, opacity: 0.04, backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
         <div className="container" style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: 260, opacity: animated ? 1 : 0, transform: animated ? 'translateY(0)' : 'translateY(20px)', transition: 'all 0.6s ease' }}>
-              <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.78rem', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div className="animate-fade" style={{ flex: 1, minWidth: 260, animationDelay: '0.1s' }}>
+              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
                 <MdFlight size={13} /> {flight.airline} • {flight.flightNumber} • {new Date(flight.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
               </div>
               <h1 style={{ fontFamily: 'Syne,sans-serif', fontWeight: 800, color: 'white', fontSize: 'clamp(1.5rem,4vw,2.3rem)', lineHeight: 1.1, marginBottom: 12 }}>
@@ -198,7 +201,7 @@ export default function FlightDetail() {
               </div>
             </div>
             {/* Flight Times */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 24, opacity: animated ? 1 : 0, transform: animated ? 'translateY(0)' : 'translateY(20px)', transition: 'all 0.6s ease 0.15s' }}>
+            <div className="animate-fade" style={{ display: 'flex', alignItems: 'center', gap: 24, animationDelay: '0.2s' }}>
               {[
                 { time: flight.departureTime, code: flight.fromCode, city: flight.from },
                 null,
@@ -226,8 +229,8 @@ export default function FlightDetail() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
             {/* Class Selection */}
-            <div style={{ background: 'white', borderRadius: 16, border: '1px solid var(--border)', padding: 24, opacity: animated ? 1 : 0, transform: animated ? 'none' : 'translateY(20px)', transition: 'all 0.5s ease' }}>
-              <h3 style={{ fontWeight: 700, marginBottom: 16 }}>✈️ Select Class</h3>
+            <div className="animate-fade" style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(16px)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.6)', padding: 24, boxShadow: '0 8px 32px rgba(0,0,0,0.03)', animationDelay: '0.3s' }}>
+              <h3 style={{ fontWeight: 800, marginBottom: 16, color: 'var(--primary)' }}>✈️ Select Class</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {flight.seatClasses?.map(sc => {
                   const isActive = selectedClass === sc.className;
@@ -282,10 +285,10 @@ export default function FlightDetail() {
 
             {/* Accordion Sections */}
             {SECTIONS.map((section, i) => (
-              <div key={section.id} id={section.id}
-                style={{ background: 'white', borderRadius: 16, border: `1.5px solid ${expandedSection === section.id ? 'var(--primary)' : 'var(--border)'}`, overflow: 'hidden', opacity: animated ? 1 : 0, transform: animated ? 'none' : 'translateY(20px)', transition: `opacity 0.5s ease ${0.1 + i * 0.06}s, transform 0.5s ease ${0.1 + i * 0.06}s, border-color 0.2s` }}>
+              <div key={section.id} id={section.id} className="animate-fade"
+                style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(16px)', borderRadius: 16, border: `1.5px solid ${expandedSection === section.id ? 'var(--primary)' : 'rgba(255,255,255,0.6)'}`, overflow: 'hidden', animationDelay: `${0.3 + (i * 0.05)}s`, boxShadow: expandedSection === section.id ? '0 10px 40px rgba(0,0,0,0.06)' : '0 4px 16px rgba(0,0,0,0.02)', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
                 <button onClick={() => setExpandedSection(expandedSection === section.id ? null : section.id)}
-                  style={{ width: '100%', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: expandedSection === section.id ? 'var(--primary-light)' : 'white', border: 'none', cursor: 'pointer', transition: 'background 0.2s' }}>
+                  style={{ width: '100%', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: expandedSection === section.id ? 'var(--primary-light)' : 'transparent', border: 'none', cursor: 'pointer', transition: 'background 0.3s' }}>
                   <div style={{ textAlign: 'left' }}>
                     <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{section.label}</div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 1 }}>{section.desc}</div>
@@ -379,8 +382,8 @@ export default function FlightDetail() {
 
           {/* ===== RIGHT: Booking Summary ===== */}
           <div style={{ position: 'sticky', top: 90 }}>
-            <div style={{ background: 'white', borderRadius: 16, border: '1px solid var(--border)', padding: 24, boxShadow: 'var(--shadow-md)', opacity: animated ? 1 : 0, transform: animated ? 'none' : 'translateY(20px)', transition: 'all 0.6s ease 0.25s' }}>
-              <h3 style={{ fontWeight: 700, marginBottom: 20 }}>Booking Summary</h3>
+            <div className="animate-fade" style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(20px)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.5)', padding: 24, boxShadow: '0 16px 40px rgba(0,0,0,0.08)', animationDelay: '0.4s' }}>
+              <h3 style={{ fontWeight: 800, marginBottom: 20, color: 'var(--primary)' }}>Booking Summary</h3>
 
               <div className="input-group" style={{ marginBottom: 16 }}>
                 <label className="input-label">Passengers</label>
@@ -481,6 +484,23 @@ export default function FlightDetail() {
       <Footer />
       <style jsx>{`
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeUpFluid {
+          from { opacity: 0; transform: translateY(15px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade {
+          animation: fadeUpFluid 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          opacity: 0;
+        }
+        .btn-primary {
+          position: relative;
+          overflow: hidden;
+          transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s;
+        }
+        .btn-primary:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px rgba(26, 110, 245, 0.3);
+        }
         @media (max-width: 900px) {
           .container > div > div:first-child + div {
             position: static !important;

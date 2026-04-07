@@ -166,7 +166,7 @@ export default function HotelDetail() {
       <div className="container" style={{ paddingTop: 24, paddingBottom: 60 }}>
 
         {/* ── Image Gallery ── */}
-        <div style={{ marginBottom: 24, borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
+        <div className="animate-fade" style={{ marginBottom: 24, borderRadius: 'var(--radius-xl)', overflow: 'hidden', animationDelay: '0.1s' }}>
 
           {/* Main Image */}
           <div style={{
@@ -230,7 +230,7 @@ export default function HotelDetail() {
         <div className="detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 28, alignItems: 'start' }}>
 
           {/* Left */}
-          <div className="main-content">
+          <div className="main-content animate-fade" style={{ animationDelay: '0.2s' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
               <h1 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 'clamp(1.3rem, 3vw, 1.8rem)' }}>{hotel.name}</h1>
               <span className="rating">⭐ {hotel.rating?.toFixed(1)}</span>
@@ -436,8 +436,8 @@ export default function HotelDetail() {
           </div>
 
           {/* Right - Booking Box */}
-          <div className="sidebar-booking">
-            <div style={{ background: 'white', borderRadius: 'var(--radius-xl)', padding: 24, boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)', position: 'sticky', top: 90 }}>
+          <div className="sidebar-booking animate-fade" style={{ animationDelay: '0.3s' }}>
+            <div style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(20px)', borderRadius: 'var(--radius-xl)', padding: 24, boxShadow: '0 16px 40px rgba(0,0,0,0.08)', border: '1px solid rgba(255,255,255,0.5)', position: 'sticky', top: 90 }}>
               <div style={{ marginBottom: 20 }}>
                 <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)' }}>{formatPrice(room.price)}</span>
                 <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}> / night</span>
@@ -505,6 +505,23 @@ export default function HotelDetail() {
       )}
 
       <style jsx>{`
+        @keyframes fadeUpFluid {
+          from { opacity: 0; transform: translateY(15px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade {
+          animation: fadeUpFluid 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          opacity: 0;
+        }
+        .btn-primary {
+          position: relative;
+          overflow: hidden;
+          transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s;
+        }
+        .btn-primary:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px rgba(26, 110, 245, 0.3);
+        }
         @media (max-width: 992px) {
           .detail-grid { grid-template-columns: 1fr !important; }
           .sidebar-booking { position: static !important; margin-top: 32px; }
