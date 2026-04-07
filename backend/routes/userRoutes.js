@@ -96,40 +96,31 @@ router.post('/wallet/razorpay-order', protect, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid amount' });
     }
 
-    // Amount is received in INR from frontend, convert to Paise for Razorpay
-    const amountInPaise = amount * 100;
-
     const rzpId = process.env.RAZORPAY_KEY_ID;
     const rzpSecret = process.env.RAZORPAY_KEY_SECRET;
 
-    if (!rzpId || !rzpSecret || rzpId.startsWith('rzp_test_z4Fk2j7aY2aXzV')) {
-      // NOTE: If generic test keys are present, we can either throw error or mock. 
-      // But we will hit the Razorpay genuine test API, which requires valid test keys!
-      // If the user's test keys are totally fake, Axios will throw 401 Unauthorized.
-      // That's fine, it behaves exactly like a real API failure.
+    if (!rzpId || !rzpSecret) {
+      return res.status(500).json({ success: false, message: 'Payment gateway not configured' });
     }
 
-    const auth = Buffer.from(`${rzpId}:${rzpSecret}`).toString('base64');
+    // Use official Razorpay SDK
+    const Razorpay = require('razorpay');
+    const razorpay = new Razorpay({ key_id: rzpId, key_secret: rzpSecret });
 
-    const response = await axios.post('https://api.razorpay.com/v1/orders', {
-      amount: amountInPaise,
+    const order = await razorpay.orders.create({
+      amount: Math.round(amount * 100), // paise
       currency: 'INR',
-      receipt: `receipt_${req.user._id}_${Date.now()}`
-    }, {
-      headers: { Authorization: `Basic ${auth}` }
+      receipt: `rcpt_${req.user._id}_${Date.now()}`
     });
 
-    res.json({
-      success: true,
-      order: response.data,
-      key: rzpId // Frontend needs the generic key to invoke checkout
-    });
+    res.json({ success: true, order, key: rzpId });
 
   } catch (error) {
-    console.error('Razorpay Error:', error.response?.data || error.message);
-    res.status(500).json({ success: false, message: error.response?.data?.error?.description || error.message });
+    console.error('Razorpay Error:', error);
+    res.status(500).json({ success: false, message: error?.error?.description || error.message || 'Payment gateway error' });
   }
 });
+
 
 router.post('/wallet/verify', protect, async (req, res) => {
   try {
