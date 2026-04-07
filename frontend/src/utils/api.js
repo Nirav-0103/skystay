@@ -31,7 +31,8 @@ export const authAPI = {
   // Saved passengers
   getSavedPassengers: () => API.get('/users/saved-passengers'),
   savePassenger: (data) => API.post('/users/saved-passengers', data),
-  addWalletFunds: (data) => API.post('/users/wallet/add', data),
+  createRazorpayOrder: (data) => API.post('/users/wallet/razorpay-order', data),
+  verifyRazorpayPayment: (data) => API.post('/users/wallet/verify', data),
 };
 
 // Hotels

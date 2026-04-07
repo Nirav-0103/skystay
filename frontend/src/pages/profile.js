@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import Script from 'next/script';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import { useAuth } from '../context/AuthContext';
@@ -121,17 +122,70 @@ export default function ProfilePage() {
     e.preventDefault();
     if (!addMoneyAmount || addMoneyAmount <= 0) return toast.error('Enter a valid amount');
     setSaving(true);
+    
     try {
-      const res = await authAPI.addWalletFunds({ amount: Number(addMoneyAmount) });
-      if (res.data.success) {
-        updateUser({ ...user, walletBalance: res.data.walletBalance });
-        toast.success(`₹${addMoneyAmount} added to SkyPay Wallet!`);
-        setAddMoneyAmount('');
+      // 1. Create Order on Backend
+      const { data } = await authAPI.createRazorpayOrder({ amount: Number(addMoneyAmount) });
+      
+      if (!data.success) {
+        toast.error('Could not initiate payment');
+        setSaving(false);
+        return;
       }
+
+      // 2. Configure Razorpay Pop-up
+      const options = {
+        key: data.key,
+        amount: data.order.amount,
+        currency: "INR",
+        name: "SkyStay Premium",
+        description: "Wallet Top-up",
+        order_id: data.order.id,
+        handler: async function (response) {
+          const verifyToast = toast.loading('Verifying payment...');
+          try {
+            // 3. Verify Payment Signature
+            const verifyRes = await authAPI.verifyRazorpayPayment({
+              ...response,
+              amount: Number(addMoneyAmount)
+            });
+
+            if (verifyRes.data.success) {
+              updateUser({ ...user, walletBalance: verifyRes.data.walletBalance });
+              toast.success(`₹${addMoneyAmount} successfully added to Wallet!`, { id: verifyToast });
+              setAddMoneyAmount('');
+            }
+          } catch (error) {
+            toast.error('Payment verification failed. If money was deducted, it will be refunded.', { id: verifyToast });
+          }
+        },
+        prefill: {
+          name: user.name,
+          email: user.email,
+          contact: user.phone || ""
+        },
+        theme: {
+          color: "#2563EB"
+        },
+        modal: {
+          ondismiss: function() {
+            setSaving(false);
+          }
+        }
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.on('payment.failed', function (response){
+        toast.error('Payment failed: ' + response.error.description);
+        setSaving(false);
+      });
+      
+      paymentObject.open();
+
     } catch (err) {
-      toast.error('Failed to add money');
+      toast.error('Failed to connect to payment gateway');
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   if (!user) return null;
@@ -139,6 +193,7 @@ export default function ProfilePage() {
   return (
     <>
       <Head><title>My Profile - SkyStay</title></Head>
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <Navbar />
 
       <div className="page-header">
