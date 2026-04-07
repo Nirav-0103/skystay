@@ -170,6 +170,30 @@ export default function Navbar() {
             </div>
           </Link>
 
+          {/* MOBILE MIDDLE QUICK ACTIONS (Dynamic Island Center Space) */}
+          <div className="md:hidden flex-1 flex justify-center mx-2 overflow-hidden transition-all duration-300">
+            {user ? (
+              <div className="flex items-center gap-5 text-sm font-semibold">
+                <Link href="/hotels" onClick={closeAll} className={`flex items-center gap-1.5 px-2 py-1 transition rounded-lg ${isActive('/hotels') ? 'text-blue-600 font-black' : (isDark ? 'text-slate-300 hover:text-blue-400' : 'text-gray-600 hover:text-blue-600')}`}>
+                  <MdHotel size={18} />
+                </Link>
+                <div className={`w-px h-4 ${isDark ? 'bg-slate-700' : 'bg-gray-300'}`} />
+                <Link href="/flights" onClick={closeAll} className={`flex items-center gap-1.5 px-2 py-1 transition rounded-lg ${isActive('/flights') ? 'text-blue-600 font-black' : (isDark ? 'text-slate-300 hover:text-blue-400' : 'text-gray-600 hover:text-blue-600')}`}>
+                  <MdFlight size={18} />
+                </Link>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <button onClick={() => { setAuthMode("login"); setShowAuth(true); }} className={`px-3 py-1.5 text-[0.7rem] uppercase tracking-wider font-black rounded-lg transition ${isDark ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>
+                  Log In
+                </button>
+                <button onClick={() => { setAuthMode("register"); setShowAuth(true); }} className="px-3 py-1.5 text-[0.7rem] uppercase tracking-wider font-black rounded-lg bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition">
+                  Join Free
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* NAV LINKS — Desktop */}
           <div className="hidden md:flex gap-1">
             {NAV_LINKS.map((link) => (
