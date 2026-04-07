@@ -99,7 +99,7 @@ export default function Home() {
         {/* 3D Globe Background */}
         <GlobeScene />
 
-        <div className="container" style={{ position: 'relative', zIndex: 1, paddingTop: 60, paddingBottom: 60, width: '100%' }}>
+        <div className="container" style={{ position: 'relative', zIndex: 2, paddingTop: 60, paddingBottom: 60, width: '100%' }}>
           <div style={{ textAlign: 'center', marginBottom: 36, opacity: heroVisible ? 1 : 0, transform: heroVisible ? 'translateY(0)' : 'translateY(30px)', transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 'var(--radius-full)', padding: '6px 16px', marginBottom: 16 }}>
               <FiStar size={12} color="#fbbf24" fill="#fbbf24" />
