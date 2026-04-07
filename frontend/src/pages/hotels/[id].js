@@ -509,7 +509,7 @@ export default function HotelDetail() {
       {show360 && (
         <Hotel360Viewer 
           onClose={() => setShow360(false)} 
-          imageUrl="https://pannellum.org/images/alma.jpg" // Using an open source reliable equirectangular image 
+          imageUrl="/images/room-360.jpg" // Ultra realistic Luxury Hotel Room Equirectangular Panorama
         />
       )}
 
