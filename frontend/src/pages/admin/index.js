@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import dynamic from 'next/dynamic';
 import { adminAPI, hotelAPI, flightAPI, bookingAPI, uploadAPI, authAPI } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/common/Navbar';
@@ -17,6 +18,11 @@ import {
 } from 'react-icons/fi';
 import { MdFlight, MdHotel } from 'react-icons/md';
 import toast from 'react-hot-toast';
+
+// ─── 3D Components (SSR-safe dynamic imports) ──────────────────────────────────
+const DashboardHeader3D = dynamic(() => import('../../components/admin/DashboardHeader3D'), { ssr: false, loading: () => <div style={{ height: 160, borderRadius: 20, background: 'linear-gradient(135deg,#0a1628,#0d2247)', marginBottom: 20 }} /> });
+const Globe3D = dynamic(() => import('../../components/admin/Globe3D'), { ssr: false, loading: () => <div style={{ height: 320, borderRadius: 16, background: '#050d1a' }} /> });
+const Chart3D = dynamic(() => import('../../components/admin/Chart3D'), { ssr: false, loading: () => <div style={{ height: 260, borderRadius: 16, background: '#0a1628' }} /> });
 
 // ─── Status config ──────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -763,10 +769,13 @@ export default function AdminDashboard() {
           {/* ── OVERVIEW ── */}
           {activeTab === 'overview' && stats && (
             <div style={{ animation: 'fadeInUp 0.4s ease' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
+              {/* 3D Dashboard Header */}
+              <div style={{ marginBottom: 20 }}>
+                <DashboardHeader3D stats={stats} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
                 <div>
-                  <h1 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Overview</h1>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '3px 0 0' }}>Welcome back, {user?.name}</p>
+                  <h1 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Dashboard Overview</h1>
                 </div>
                 <Btn onClick={loadData} variant="ghost"><FiRefreshCw size={13} /> Refresh</Btn>
               </div>
@@ -779,7 +788,7 @@ export default function AdminDashboard() {
                 <StatCard label="Pending Refunds" value={refunds.filter(r => r.refund?.status === 'pending').length} icon={<FiAlertCircle size={18}/>} accent="#ef4444" />
               </div>
 
-              {/* Charts Row 1 */}
+              {/* Charts Row 1 — 2D Charts */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 20, marginBottom: 20 }}>
                 {/* Revenue Trend Area Chart */}
                 <div style={{ background: 'var(--bg-card)', padding: 24, borderRadius: 18, border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
@@ -867,6 +876,28 @@ export default function AdminDashboard() {
                         <Bar dataKey="revenue" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />
                       </BarChart>
                     </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── 3D Charts Row ── */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: 20, marginBottom: 20 }}>
+                {/* 3D Globe */}
+                <div style={{ background: 'var(--bg-card)', borderRadius: 18, border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
+                  <div style={{ padding: '16px 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)', margin: 0 }}>🌏 Booking Heatmap</h3>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', background: 'var(--bg-secondary)', padding: '2px 8px', borderRadius: 20 }}>India & Global</span>
+                  </div>
+                  <Globe3D />
+                </div>
+                {/* 3D Revenue Bar Chart */}
+                <div style={{ background: 'var(--bg-card)', borderRadius: 18, border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
+                  <div style={{ padding: '16px 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)', margin: 0 }}>📊 3D Revenue Bars</h3>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', background: 'var(--bg-secondary)', padding: '2px 8px', borderRadius: 20 }}>Drag to rotate</span>
+                  </div>
+                  <div style={{ padding: '12px 16px 16px' }}>
+                    <Chart3D data={stats.monthlyRevenue?.slice(-6) || []} />
                   </div>
                 </div>
               </div>
