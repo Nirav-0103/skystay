@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useTranslation } from "next-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import { useTheme } from "../../context/ThemeContext";
@@ -23,7 +22,6 @@ export default function Navbar() {
   const { currency, changeCurrency, currencies } = useCurrency();
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
-  const { t } = useTranslation('common');
 
   const [scrolled, setScrolled] = useState(false);
   const [profile, setProfile] = useState(false);
@@ -92,9 +90,9 @@ export default function Navbar() {
 
   const NAV_LINKS = [
     { href: "/ai-trip-planner", label: "AI Planner", icon: <FiZap size={17} />,    color: "#eab308" },
-    { href: "/hotels",       label: t("nav_hotels"),   icon: <MdHotel size={17} />,   color: "#2563eb" },
-    { href: "/flights",      label: t("nav_flights"),  icon: <MdFlight size={17} />,  color: "#7c3aed" },
-    { href: "/deals",        label: t("nav_deals"),    icon: <FiPercent size={15} />, color: "#d97706" },
+    { href: "/hotels",       label: "Hotels",   icon: <MdHotel size={17} />,   color: "#2563eb" },
+    { href: "/flights",      label: "Flights",  icon: <MdFlight size={17} />,  color: "#7c3aed" },
+    { href: "/deals",        label: "Deals",    icon: <FiPercent size={15} />, color: "#d97706" },
     { href: "/destinations", label: "Explore",  icon: <MdMap size={17} />,     color: "#059669" },
     { href: "/feed",         label: "SkyFeed",  icon: <FiStar size={15} />,    color: "#db2777" },
   ];
