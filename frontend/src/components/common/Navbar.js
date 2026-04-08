@@ -156,7 +156,7 @@ export default function Navbar() {
           }} />
         )}
 
-        <div className={`mx-auto px-6 flex items-center justify-between transition-all duration-700 ${scrolled ? 'py-3' : 'py-4 max-w-7xl'}`}>
+        <div className={`mx-auto flex items-center justify-between transition-all duration-700 ${scrolled ? 'py-3 px-5 pr-6' : 'px-6 py-4 max-w-7xl'}`}>
 
           {/* LOGO */}
           <Link href="/" onClick={closeAll} className="flex items-center cursor-pointer group">
