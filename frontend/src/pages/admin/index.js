@@ -339,10 +339,11 @@ export default function AdminDashboard() {
     try {
       await adminAPI.confirmBooking(id);
       toast.success('Booking confirmed ✅');
+      // Optimistically update UI immediately
       setPendingBookings(prev => prev.filter(b => b._id !== id));
       setBookings(prev => prev.map(b => b._id === id ? { ...b, status: 'confirmed' } : b));
-      // Refresh user data to update SkyPoints in navbar
-      await refreshUser();
+      // Refresh user data in background (no await = instant UX)
+      refreshUser();
     } catch { toast.error('Failed to confirm'); }
     setActionLoading(null);
   };

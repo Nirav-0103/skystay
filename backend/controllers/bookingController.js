@@ -257,9 +257,9 @@ exports.updateBookingStatus = async (req, res) => {
         .populate('hotel', 'name city address images')
         .populate('flight', 'flightNumber airline from to departureTime arrivalTime');
       
-      // Await email delivery gracefully
-      await emailService.sendBookingConfirmed(populated, populated.user).catch(e => console.error('Confirmed email err:', e));
-      await emailService.sendBookingInvoice(populated, populated.user).catch(e => console.error('Invoice email err:', e));
+      // Fire emails in background - do NOT await (instant API response)
+      emailService.sendBookingConfirmed(populated, populated.user).catch(e => console.error('Confirmed email err:', e));
+      emailService.sendBookingInvoice(populated, populated.user).catch(e => console.error('Invoice email err:', e));
     }
 
     const user = await User.findById(booking.user);
