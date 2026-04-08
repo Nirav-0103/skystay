@@ -108,6 +108,11 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/upload', uploadRoutes);
 
+const pushRoutes = require('./routes/pushRoutes');
+const promoRoutes = require('./routes/promoRoutes');
+app.use('/api/push', pushRoutes);
+app.use('/api/promo', promoRoutes);
+
 // ─── ERROR HANDLERS ───────────────────────────────────────────
 app.use((req, res) =>
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` })

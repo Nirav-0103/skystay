@@ -5,6 +5,7 @@ import { ThemeProvider } from '../context/ThemeContext';
 import { Toaster } from 'react-hot-toast';
 import AIChatbot from '../components/common/AIChatbot';
 import dynamic from 'next/dynamic';
+import { appWithTranslation } from 'next-i18next';
 
 const LuxuryCursor = dynamic(() => import('../components/common/LuxuryCursor'), { ssr: false });
 import 'leaflet/dist/leaflet.css';
@@ -13,7 +14,7 @@ import SmoothScroll from '../components/common/SmoothScroll';
 import { AnimatePresence } from 'framer-motion';
 import PageTransition from '../components/common/PageTransition';
 
-export default function App({ Component, pageProps }) {
+function App({ Component, pageProps }) {
   return (
     <ThemeProvider>
       <AuthProvider>
@@ -39,3 +40,5 @@ export default function App({ Component, pageProps }) {
     </ThemeProvider>
   );
 }
+
+export default appWithTranslation(App);

@@ -5,8 +5,13 @@ import { FiCreditCard, FiSmartphone, FiHome } from 'react-icons/fi';
 export default function PaymentModal({ amount, bookingData, onSuccess, onClose, user, razorpayKey, onRefreshUser }) {
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [loading, setLoading] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [discount, setDiscount] = useState(0);
+  const [applyingPromo, setApplyingPromo] = useState(false);
+
+  const finalAmount = amount - discount;
   const walletBal = user?.walletBalance || 0;
-  const canUseWallet = walletBal >= amount;
+  const canUseWallet = walletBal >= finalAmount;
 
   // Smart number formatter - abbreviates large numbers
   const fmt = (n) => {
@@ -52,7 +57,7 @@ export default function PaymentModal({ amount, bookingData, onSuccess, onClose, 
 
     const options = {
       key: razorpayKey || 'rzp_test_Saa4MIHeMmOARW',
-      amount: amount * 100,
+      amount: finalAmount * 100,
       currency: 'INR',
       name: 'SkyStay',
       description: isHotel ? 'Hotel Booking' : 'Flight Booking',
@@ -62,6 +67,8 @@ export default function PaymentModal({ amount, bookingData, onSuccess, onClose, 
           await onSuccess(method, {
             transactionId: response.razorpay_payment_id,
             razorpayOrderId: response.razorpay_order_id,
+            promoCode: discount > 0 ? promoCode : null,
+            discount: discount
           });
           toast.success('Payment successful! Booking confirmed 🎉');
           onClose();
@@ -122,7 +129,7 @@ export default function PaymentModal({ amount, bookingData, onSuccess, onClose, 
       icon: <span style={{ fontSize: '1.2rem' }}>💳</span>,
       desc: canUseWallet
         ? `Balance: ${fmt(walletBal)} ✅`
-        : `Balance: ${fmt(walletBal)} — Need ${fmt(amount - walletBal)} more`,
+        : `Balance: ${fmt(walletBal)} — Need ${fmt(finalAmount - walletBal)} more`,
       color: '#fbbf24',
       bg: '#fcf8eb',
       disabled: !canUseWallet
@@ -167,13 +174,17 @@ export default function PaymentModal({ amount, bookingData, onSuccess, onClose, 
     
     // Handle SkyPay Wallet
     if (paymentMethod === 'wallet') {
-      if ((user?.walletBalance || 0) < amount) {
+      if ((user?.walletBalance || 0) < finalAmount) {
         toast.error('Insufficient SkyPay Wallet balance! Please top up your wallet in Profile.');
         return;
       }
       setLoading(true);
       try {
-        await onSuccess('wallet', { transactionId: 'TXN_SKY_' + Date.now() });
+        await onSuccess('wallet', { 
+          transactionId: 'TXN_SKY_' + Date.now(),
+          promoCode: discount > 0 ? promoCode : null,
+          discount: discount
+        });
         // Refresh user from server to get updated wallet balance
         if (onRefreshUser) await onRefreshUser();
         toast.success('Payment successful via SkyPay Wallet! 🎉');
@@ -186,6 +197,34 @@ export default function PaymentModal({ amount, bookingData, onSuccess, onClose, 
     }
 
     handleRazorpay(paymentMethod);
+  };
+
+  const applyPromoCode = async () => {
+    if (!promoCode.trim()) return toast.error('Enter a promo code');
+    setApplyingPromo(true);
+    try {
+      // Direct call to backend to validate memo
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000'}/api/promo/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user ? localStorage.getItem('token') : ''}`
+        },
+        body: JSON.stringify({ code: promoCode, amount })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDiscount(data.discount);
+        toast.success(data.message || 'Promo applied!');
+      } else {
+        toast.error(data.message || 'Invalid promo code');
+        setDiscount(0);
+      }
+    } catch (err) {
+      toast.error('Failed to validate promo code');
+      setDiscount(0);
+    }
+    setApplyingPromo(false);
   };
 
   return (
@@ -204,12 +243,35 @@ export default function PaymentModal({ amount, bookingData, onSuccess, onClose, 
         {/* Amount */}
         <div style={{ background: 'linear-gradient(135deg, var(--primary) 0%, #0e4fc4 100%)', borderRadius: 'var(--radius-lg)', padding: '16px 20px', marginBottom: 24, color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: '0.82rem', opacity: 0.8 }}>Total Amount</div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>₹{amount?.toLocaleString()}</div>
+            <div style={{ fontSize: '0.82rem', opacity: 0.8 }}>Total Amount {discount > 0 && '(Discount Applied)'}</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>₹{finalAmount?.toLocaleString()}</div>
+            {discount > 0 && (
+              <div style={{ fontSize: '0.85rem', textDecoration: 'line-through', opacity: 0.7 }}>
+                ₹{amount?.toLocaleString()}
+              </div>
+            )}
           </div>
           <div style={{ opacity: 0.7, fontSize: '0.85rem' }}>
             {isHotel ? '🏨 Hotel Booking' : '✈️ Flight Booking'}
           </div>
+        </div>
+
+        {/* Promo Code Input */}
+        <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
+          <input 
+            type="text" 
+            placeholder="Enter Promo Code (e.g. SKY10)"
+            value={promoCode}
+            onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+            disabled={discount > 0}
+            style={{ flex: 1, padding: '12px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', fontSize: '0.9rem', outline: 'none' }}
+          />
+          <button 
+            onClick={discount > 0 ? () => { setDiscount(0); setPromoCode(''); toast.success('Promo removed'); } : applyPromoCode}
+            disabled={applyingPromo}
+            style={{ padding: '0 16px', background: discount > 0 ? '#ef4444' : '#10b981', color: 'white', border: 'none', borderRadius: 'var(--radius-md)', fontWeight: 600, cursor: 'pointer' }}>
+            {applyingPromo ? '...' : discount > 0 ? 'Remove' : 'Apply'}
+          </button>
         </div>
 
         {/* Payment Methods */}
@@ -223,7 +285,7 @@ export default function PaymentModal({ amount, bookingData, onSuccess, onClose, 
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--text-primary)' }}>{opt.label}</div>
                 <div style={{ fontSize: '0.78rem', color: opt.disabled && opt.id === 'wallet' ? '#ef4444' : 'var(--text-muted)' }}>
-                  {opt.disabled && opt.id === 'wallet' ? `Need ₹${(amount - (user?.walletBalance || 0)).toLocaleString()} more` : opt.desc}
+                  {opt.disabled && opt.id === 'wallet' ? `Need ₹${(finalAmount - (user?.walletBalance || 0)).toLocaleString()} more` : opt.desc}
                 </div>
               </div>
               {/* UPI logos */}
@@ -248,7 +310,7 @@ export default function PaymentModal({ amount, bookingData, onSuccess, onClose, 
             ? <span className="loader" style={{ width: 20, height: 20, borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)', borderTopColor: 'white' }} />
             : paymentMethod === 'cod'
               ? '📋 Request Booking'
-              : `🔒 Pay ₹${amount?.toLocaleString()}`
+              : `🔒 Pay ₹${finalAmount?.toLocaleString()}`
           }
         </button>
 

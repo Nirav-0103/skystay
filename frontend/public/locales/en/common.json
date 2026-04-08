@@ -1,0 +1,10 @@
+{
+  "nav_home": "Home",
+  "nav_hotels": "Hotels",
+  "nav_flights": "Flights",
+  "nav_deals": "Deals",
+  "nav_profile": "Profile",
+  "nav_logout": "Logout",
+  "book_now": "Book Now",
+  "search": "Search"
+}
