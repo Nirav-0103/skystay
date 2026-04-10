@@ -1,10 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 
-// We use vanilla Three.js instead of React Three Fiber for maximum compatibility
-let THREE;
-if (typeof window !== 'undefined') {
-  THREE = require('three');
-}
+import * as THREE from 'three';
 
 export default function GlobeScene() {
   const containerRef = useRef(null);

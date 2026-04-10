@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 42011",
+    "dev": "next dev -p 42011 --webpack",
     "build": "next build",
     "start": "next start -p 42011",
     "lint": "next lint"

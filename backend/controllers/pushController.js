@@ -11,6 +11,27 @@ try {
   console.error("VAPID Keys poorly configured. Push will fail.");
 }
 
+// ─── Reusable helper: call from any controller to push to a user's devices ───
+exports.sendPushToUser = async (userId, { title, message, url = '/' }) => {
+  try {
+    const subs = await PushSubscription.find({ user: userId, isActive: true });
+    if (!subs.length) return;
+    const payload = JSON.stringify({ title, message, url });
+    for (const sub of subs) {
+      try {
+        await webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, payload);
+      } catch (err) {
+        // 410 Gone or 404 = subscription expired, remove it
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          await PushSubscription.findByIdAndDelete(sub._id);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('sendPushToUser error:', err.message);
+  }
+};
+
 exports.subscribe = async (req, res) => {
   try {
     const { subscription, deviceInfo } = req.body;

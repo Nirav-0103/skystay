@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { authAPI } from '../utils/api';
+import { subscribeUserToPush } from '../utils/pushHelper';
 
 const API = "/api";
 const AuthContext = createContext();
@@ -28,6 +29,8 @@ export const AuthProvider = ({ children }) => {
           if (res.data.success) {
             setUser(res.data.user);
             localStorage.setItem('skystay_user', JSON.stringify(res.data.user));
+            // Auto re-subscribe push on session restore
+            subscribeUserToPush(res.data.user).catch(() => {});
           }
         } catch (err) {
           // Token expired or invalid — clear session
@@ -50,6 +53,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('skystay_token', t);
     localStorage.setItem('skystay_user', JSON.stringify(u));
     axios.defaults.headers.common['Authorization'] = `Bearer ${t}`;
+    // 🔔 Subscribe to push notifications on login
+    subscribeUserToPush(u).catch(() => {});
     return u;
   };
 
@@ -60,6 +65,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('skystay_token', t);
     localStorage.setItem('skystay_user', JSON.stringify(u));
     axios.defaults.headers.common['Authorization'] = `Bearer ${t}`;
+    // 🔔 Subscribe to push notifications on register
+    subscribeUserToPush(u).catch(() => {});
     return u;
   };
 

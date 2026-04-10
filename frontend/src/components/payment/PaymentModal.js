@@ -203,12 +203,14 @@ export default function PaymentModal({ amount, bookingData, onSuccess, onClose, 
     if (!promoCode.trim()) return toast.error('Enter a promo code');
     setApplyingPromo(true);
     try {
-      // Direct call to backend to validate memo
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000'}/api/promo/validate`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000/api';
+      const endpoint = baseUrl.endsWith('/api') ? `${baseUrl}/promo/validate` : `${baseUrl}/api/promo/validate`;
+      
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${user ? localStorage.getItem('token') : ''}`
+          Authorization: `Bearer ${user ? localStorage.getItem('skystay_token') || localStorage.getItem('token') : ''}`
         },
         body: JSON.stringify({ code: promoCode, amount })
       });

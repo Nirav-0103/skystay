@@ -3,6 +3,7 @@ const User = require('../models/User');
 const emailService = require('../services/emailService');
 const Hotel = require('../models/Hotel');
 const Flight = require('../models/Flight');
+const { sendPushToUser } = require('./pushController');
 
 const POINTS_RATE = 0.01;
 
@@ -113,6 +114,13 @@ exports.createBooking = async (req, res) => {
         type: 'booking'
       });
       await user.save();
+
+      // 🔔 Fire real browser push notification (background)
+      sendPushToUser(user._id, {
+        title: 'Booking Created! 📋',
+        message: `Your ${bookingData.bookingType} booking has been received and is pending confirmation.`,
+        url: '/bookings'
+      });
     }
 
     res.status(201).json({ success: true, booking: populated, walletBalance: user?.walletBalance });
@@ -271,6 +279,13 @@ exports.updateBookingStatus = async (req, res) => {
         type: 'booking'
       });
       await user.save();
+
+      // 🔔 Fire real browser push notification (background)
+      sendPushToUser(user._id, {
+        title: `Booking ${req.body.status === 'confirmed' ? 'Confirmed ✅' : req.body.status === 'cancelled' ? 'Cancelled ❌' : 'Updated ℹ️'}`,
+        message: `Booking #${booking.bookingId} is now ${req.body.status.toUpperCase()}.`,
+        url: '/bookings'
+      });
     }
 
     res.json({ success: true, booking });

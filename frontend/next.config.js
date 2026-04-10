@@ -3,7 +3,8 @@ const { i18n } = require('./next-i18next.config');
 
 const nextConfig = {
   i18n,
-  reactStrictMode: true,
+  reactStrictMode: false,
+  transpilePackages: ['three', '@react-three/drei', '@react-three/fiber'],
   allowedDevOrigins: ['192.0.0.2'],
   eslint: {
     ignoreDuringBuilds: true,

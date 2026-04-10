@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useAuth } from "../../context/AuthContext";
 import { useCurrency } from "../../context/CurrencyContext";
-import { useTheme } from "../../context/ThemeContext";
+
 import AuthModal from "../auth/AuthModal";
 import {
   FiBell, FiUser, FiLogOut, FiSettings,
@@ -20,7 +20,7 @@ export default function Navbar() {
     markNotifRead, markAllNotifsRead, clearAllNotifs, deleteNotif 
   } = useAuth();
   const { currency, changeCurrency, currencies } = useCurrency();
-  const { theme, toggleTheme } = useTheme();
+
   const router = useRouter();
 
   const [scrolled, setScrolled] = useState(false);
@@ -111,7 +111,7 @@ export default function Navbar() {
   const isActive = (href) => router.pathname === href || router.pathname.startsWith(href + "/");
   const closeAll = () => { setProfile(false); setShowNotifs(false); setShowCurrencyMenu(false); setMenu(false); };
 
-  const isDark = theme === "dark";
+  const isDark = false; // Hardcoded to false since Dark Mode is removed
   const unreadCount = user?.notifications?.filter(n => !n.read).length || 0;
 
   // 🔹 Auto-mark as read when dropdown is opened
@@ -261,14 +261,7 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              title="Toggle theme"
-              className={`p-2 rounded-lg transition ${isDark ? "text-slate-400 hover:bg-slate-800" : "text-gray-700 hover:bg-gray-100"}`}
-            >
-              {isDark ? <FiSun size={16} /> : <FiMoon size={16} />}
-            </button>
+
 
             {user ? (
               <>
@@ -503,13 +496,6 @@ export default function Navbar() {
 
             {/* Settings row */}
             <div className={`border rounded-xl overflow-hidden ${isDark ? "border-slate-700" : ""}`}>
-              <div className={`flex items-center justify-between px-4 py-3 border-b cursor-pointer transition ${isDark ? "border-slate-700 hover:bg-slate-800" : "hover:bg-gray-50"}`} onClick={toggleTheme}>
-                <div className={`flex items-center gap-2 text-sm font-semibold ${isDark ? "text-white" : "text-gray-600"}`}>
-                  {isDark ? <FiSun size={16} /> : <FiMoon size={16} />}
-                  Appearance
-                </div>
-                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">{isDark ? "Dark" : "Light"}</span>
-              </div>
               <div className="flex items-center justify-between px-4 py-3">
                 <div className={`flex items-center gap-2 text-sm font-semibold ${isDark ? "text-white" : "text-gray-600"}`}>
                   <FiGlobe size={16} />

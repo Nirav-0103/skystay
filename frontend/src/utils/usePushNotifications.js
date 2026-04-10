@@ -52,7 +52,7 @@ export function usePushNotifications(user) {
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000'}/api/push/subscribe`,
         { subscription: sub, deviceInfo: navigator.userAgent },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        { headers: { Authorization: `Bearer ${localStorage.getItem('skystay_token')}` } }
       );
       
       setIsSubscribed(true);

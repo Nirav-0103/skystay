@@ -19,10 +19,7 @@ import {
 import { MdFlight, MdHotel } from 'react-icons/md';
 import toast from 'react-hot-toast';
 
-// ─── 3D Components (SSR-safe dynamic imports) ──────────────────────────────────
-const DashboardHeader3D = dynamic(() => import('../../components/admin/DashboardHeader3D'), { ssr: false, loading: () => <div style={{ height: 160, borderRadius: 20, background: 'linear-gradient(135deg,#0a1628,#0d2247)', marginBottom: 20 }} /> });
-const Globe3D = dynamic(() => import('../../components/admin/Globe3D'), { ssr: false, loading: () => <div style={{ height: 320, borderRadius: 16, background: '#050d1a' }} /> });
-const Chart3D = dynamic(() => import('../../components/admin/Chart3D'), { ssr: false, loading: () => <div style={{ height: 260, borderRadius: 16, background: '#0a1628' }} /> });
+// ─── Removed 3D Components due to WebGL conflicts ──────────────────────────────────
 
 // ─── Status config ──────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -341,27 +338,44 @@ export default function AdminDashboard() {
   };
 
   const handleConfirm = async (id) => {
+    // 1. Optimistic UI Update (Instant - Microsecond Execution)
+    const backupPending = [...pendingBookings];
+    const backupBookings = [...bookings];
+    setPendingBookings(prev => prev.filter(b => b._id !== id));
+    setBookings(prev => prev.map(b => b._id === id ? { ...b, status: 'confirmed' } : b));
+    
     setActionLoading(id + '_confirm');
     try {
+      // 2. Server Request in Background
       await adminAPI.confirmBooking(id);
       toast.success('Booking confirmed ✅');
-      // Optimistically update UI immediately
-      setPendingBookings(prev => prev.filter(b => b._id !== id));
-      setBookings(prev => prev.map(b => b._id === id ? { ...b, status: 'confirmed' } : b));
-      // Refresh user data in background (no await = instant UX)
       refreshUser();
-    } catch { toast.error('Failed to confirm'); }
+    } catch { 
+      // 3. Rollback if Server Fails
+      setPendingBookings(backupPending);
+      setBookings(backupBookings);
+      toast.error('Failed to confirm'); 
+    }
     setActionLoading(null);
   };
 
   const handleReject = async (id) => {
     const reason = prompt('Rejection reason (optional):') || 'Rejected by admin';
+    
+    // 1. Optimistic UI Update
+    const backupPending = [...pendingBookings];
+    setPendingBookings(prev => prev.filter(b => b._id !== id));
+    
     setActionLoading(id + '_reject');
     try {
+      // 2. Server Request in Background
       await adminAPI.rejectBooking(id, reason);
       toast.success('Booking rejected');
-      setPendingBookings(prev => prev.filter(b => b._id !== id));
-    } catch { toast.error('Failed to reject'); }
+    } catch { 
+      // 3. Rollback if Server Fails
+      setPendingBookings(backupPending);
+      toast.error('Failed to reject'); 
+    }
     setActionLoading(null);
   };
 
@@ -769,15 +783,55 @@ export default function AdminDashboard() {
           {/* ── OVERVIEW ── */}
           {activeTab === 'overview' && stats && (
             <div style={{ animation: 'fadeInUp 0.4s ease' }}>
-              {/* 3D Dashboard Header */}
-              <div style={{ marginBottom: 20 }}>
-                <DashboardHeader3D stats={stats} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-                <div>
-                  <h1 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Dashboard Overview</h1>
+              {/* Premium Dashboard Header Banner */}
+              <div style={{
+                position: 'relative',
+                marginBottom: 28,
+                padding: '36px 40px',
+                borderRadius: 24,
+                background: 'linear-gradient(135deg, var(--primary) 0%, #0f2347 100%)',
+                color: 'white',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                boxShadow: '0 12px 32px rgba(26, 110, 245, 0.2)',
+                overflow: 'hidden'
+              }}>
+                <div style={{ position: 'relative', zIndex: 2 }}>
+                  <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 8, opacity: 0.85 }}>
+                    ✦ SkyStay Admin Portal
+                  </div>
+                  <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: '2.2rem', fontWeight: 800, margin: 0, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+                    Dashboard Overview
+                  </h1>
                 </div>
-                <Btn onClick={loadData} variant="ghost"><FiRefreshCw size={13} /> Refresh</Btn>
+                <div style={{ position: 'relative', zIndex: 2 }}>
+                  <button 
+                    onClick={loadData} 
+                    style={{ 
+                      background: 'rgba(255, 255, 255, 0.12)', 
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      padding: '10px 18px', 
+                      borderRadius: 12, 
+                      color: 'white', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 8, 
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseOver={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+                    onMouseOut={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)'}
+                  >
+                    <FiRefreshCw size={14} /> Refresh Data
+                  </button>
+                </div>
+                {/* Decorative background elements */}
+                <div style={{ position: 'absolute', right: '-5%', top: '-30%', width: 350, height: 350, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%)', zIndex: 1, pointerEvents: 'none' }} />
+                <div style={{ position: 'absolute', right: '15%', bottom: '-20%', width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 70%)', zIndex: 1, pointerEvents: 'none' }} />
               </div>
 
               {/* Stat Cards */}
@@ -880,27 +934,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* ── 3D Charts Row ── */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: 20, marginBottom: 20 }}>
-                {/* 3D Globe */}
-                <div style={{ background: 'var(--bg-card)', borderRadius: 18, border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
-                  <div style={{ padding: '16px 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)', margin: 0 }}>🌏 Booking Heatmap</h3>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', background: 'var(--bg-secondary)', padding: '2px 8px', borderRadius: 20 }}>India & Global</span>
-                  </div>
-                  <Globe3D />
-                </div>
-                {/* 3D Revenue Bar Chart */}
-                <div style={{ background: 'var(--bg-card)', borderRadius: 18, border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
-                  <div style={{ padding: '16px 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)', margin: 0 }}>📊 3D Revenue Bars</h3>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', background: 'var(--bg-secondary)', padding: '2px 8px', borderRadius: 20 }}>Drag to rotate</span>
-                  </div>
-                  <div style={{ padding: '12px 16px 16px' }}>
-                    <Chart3D data={stats.monthlyRevenue?.slice(-6) || []} />
-                  </div>
-                </div>
-              </div>
+              {/* Removed 3D Charts Row */}
 
               {/* Inventory Overview Section */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 24 }}>
