@@ -565,17 +565,27 @@ export default function AdminDashboard() {
         .sidebar-item { transition: all 0.12s; }
         .sidebar-item:hover { background: var(--bg-secondary) !important; }
         .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .admin-layout { display: flex; min-height: calc(100vh - 60px); background: var(--bg); }
+        .admin-layout { 
+          display: flex; 
+          min-height: 100vh; 
+          background: var(--bg); 
+          padding: 110px 24px 24px; 
+          gap: 24px;
+          max-width: 1600px;
+          margin: 0 auto;
+        }
         .admin-sidebar {
-          width: 240px; flex-shrink: 0;
+          width: 260px; flex-shrink: 0;
           background: var(--bg-card); color: var(--text-primary);
-          position: sticky; top: 68px;
-          height: calc(100vh - 68px); overflow-y: auto;
-          border-right: 1px solid var(--border);
+          position: sticky; top: 110px;
+          height: calc(100vh - 134px); overflow-y: auto;
+          border: 1px solid var(--border);
+          border-radius: 20px;
+          box-shadow: var(--shadow-sm);
           transition: all 0.3s cubic-bezier(.4,0,.2,1);
           z-index: 200;
         }
-        .admin-main { flex: 1; padding: 32px; min-width: 0; background: var(--bg); }
+        .admin-main { flex: 1; padding: 0; min-width: 0; background: transparent; }
         .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
         .mobile-topbar { display: none; }
         .sidebar-overlay { display: none; position: fixed; inset: 0; background: var(--bg-overlay); backdrop-filter: blur(2px); z-index: 199; }
@@ -583,15 +593,17 @@ export default function AdminDashboard() {
         
         /* 📱 iPad Mini & iPad Air (Portrait & Landscape optimization) */
         @media (max-width: 1024px) {
+          .admin-layout { padding: 110px 20px 20px !important; gap: 20px !important; }
           .admin-sidebar { 
             position: fixed !important; 
             top: 0 !important; 
             left: 0 !important; 
             height: 100vh !important; 
             width: 280px !important;
+            border-radius: 0 !important;
             transform: translateX(-100%); 
             z-index: 1000 !important; 
-            box-shadow: 20px 0 50px rgba(0,0,0,0.2);
+            box-shadow: 20px 0 50px rgba(0,0,0,0.2) !important;
           }
           .admin-sidebar.open { transform: translateX(0) !important; }
           .sidebar-overlay.open { display: block !important; }
@@ -602,23 +614,28 @@ export default function AdminDashboard() {
             justify-content: space-between; 
             padding: 12px 20px; 
             background: var(--bg-card); 
-            border-bottom: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
             position: sticky; 
-            top: 68px; 
+            top: 110px; 
             z-index: 40; 
+            box-shadow: var(--shadow-sm);
           }
-          .admin-main { padding: 24px !important; }
+          .admin-main { padding: 0 !important; }
           .stat-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 14px !important; }
         }
 
         @media (max-width: 768px) {
+          .admin-layout { padding: 90px 16px 16px !important; }
+          .mobile-topbar { top: 90px; }
           .stat-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
-          .admin-main { padding: 20px !important; }
         }
 
         @media (max-width: 480px) {
+          .admin-layout { padding: 80px 12px 12px !important; gap: 16px !important; }
+          .mobile-topbar { top: 80px; }
           .stat-grid { grid-template-columns: 1fr !important; }
-          .admin-main { padding: 16px !important; }
         }
       `}</style>
 

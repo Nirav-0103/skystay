@@ -132,19 +132,19 @@ export default function Navbar() {
   return (
     <>
       {/* Container wrapper for the floating island effect */}
-      <div className={`fixed top-0 w-full z-50 pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${scrolled ? 'pt-6 px-4 md:px-8' : 'pt-0 px-0'}`}>
+      <div className={`fixed top-0 w-full z-50 pointer-events-none transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] pt-4 px-4 md:pt-5 md:px-8`}>
         
         <nav className={`relative pointer-events-auto mx-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]
           ${scrolled 
             ? `max-w-5xl rounded-[32px] ${isDark ? 'bg-slate-900/60 border border-white/10' : 'bg-white/60 border border-black/5'} shadow-2xl`
-            : `max-w-full rounded-none ${isDark ? 'bg-slate-900/80 border-b border-white/5' : 'bg-white/80 border-b border-black/5'} shadow-sm`
+            : `max-w-[1400px] rounded-[32px] ${isDark ? 'bg-slate-900/80 border border-white/10' : 'bg-white/80 border border-black/5'} shadow-lg`
           }`}
           style={{
             backdropFilter: 'blur(36px) saturate(200%)',
             WebkitBackdropFilter: 'blur(36px) saturate(200%)',
             boxShadow: scrolled 
               ? (isDark ? 'inset 0 1px 1px rgba(255,255,255,0.1), 0 32px 64px rgba(0,0,0,0.4)' : 'inset 0 1px 1px rgba(255, 255, 255, 0.8), 0 32px 64px rgba(0,0,0,0.08)')
-              : 'none'
+              : (isDark ? 'inset 0 1px 1px rgba(255,255,255,0.05), 0 16px 32px rgba(0,0,0,0.2)' : 'inset 0 1px 1px rgba(255, 255, 255, 0.8), 0 16px 32px rgba(0,0,0,0.04)')
           }}
         >
         
@@ -156,15 +156,15 @@ export default function Navbar() {
           }} />
         )}
 
-        <div className={`mx-auto flex items-center justify-between transition-all duration-700 ${scrolled ? 'py-3 px-5 pr-6' : 'px-6 py-4 max-w-7xl'}`}>
+        <div className={`mx-auto flex items-center justify-between transition-all duration-700 ${scrolled ? 'py-3 px-5 pr-6' : 'px-6 py-3.5 max-w-[1400px]'}`}>
 
           {/* LOGO */}
           <Link href="/" onClick={closeAll} className="flex items-center cursor-pointer group">
             <div className="p-2 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 transition group-hover:scale-105 shadow-[0_8px_16px_rgba(37,99,235,0.2)] shrink-0">
               <MdFlight size={20} color="white" />
             </div>
-            <div className={`overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${scrolled ? 'max-w-0 opacity-0 ml-0' : 'max-w-[200px] opacity-100 ml-2'}`}>
-              <span className={`text-2xl font-black tracking-[-0.05em] whitespace-nowrap ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: 'Syne, sans-serif' }}>
+            <div className={`overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${scrolled ? 'max-w-0 opacity-0 ml-0' : 'max-w-[200px] opacity-100 ml-3'}`}>
+              <span className={`text-[22px] font-black tracking-[-0.03em] whitespace-nowrap ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: 'Syne, sans-serif' }}>
                 SkyStay
               </span>
             </div>
